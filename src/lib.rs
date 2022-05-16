@@ -1,7 +1,9 @@
 use darling::ast::Data;
 use darling::FromDeriveInput;
 use proc_macro::TokenStream;
+use darling::util::Ignored;
 use quote::quote;
+use crate::field::Field;
 
 use crate::from_iter::FromSliceOpts;
 use crate::to_vec::ToVecOpts;
@@ -20,11 +22,7 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
     let ident = opts.ident;
     let generics = opts.generics;
 
-    let fields = match opts.data {
-        Data::Enum(_) => unimplemented!("enums are not implemented"),
-        Data::Struct(fields) => fields.fields,
-    };
-    let push_fields = fields.into_iter().map(|field| {
+    let push_fields = get_fields(opts.data).into_iter().map(|field| {
         let ident = field.ident.expect("unnamed fields are not implemented");
         let ty = field.ty;
         let key = format!("{}", ident);
@@ -55,11 +53,7 @@ pub fn from_slice(input: TokenStream) -> TokenStream {
     let ident = opts.ident;
     let generics = opts.generics;
 
-    let fields = match opts.data {
-        Data::Enum(_) => unimplemented!("enums are not implemented"),
-        Data::Struct(fields) => fields.fields,
-    };
-    let match_and_set = fields.into_iter().map(|field| {
+    let match_and_set = get_fields(opts.data).into_iter().map(|field| {
         let ident = field.ident.expect("unnamed fields are not implemented");
         let ty = field.ty;
         let key = format!("{}", ident);
@@ -86,6 +80,13 @@ pub fn from_slice(input: TokenStream) -> TokenStream {
         }
     };
     tokens.into()
+}
+
+fn get_fields(data: Data<Ignored, Field>) -> Vec<Field> {
+    match data {
+        Data::Enum(_) => unimplemented!("enums are not implemented"),
+        Data::Struct(fields) => fields.fields,
+    }
 }
 
 #[cfg(doctest)]
