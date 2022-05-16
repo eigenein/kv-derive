@@ -1,9 +1,11 @@
 # `kv-derive`
 
+Derive `struct` conversions from and to key-value vectors using [`ToString`](https://doc.rust-lang.org/std/string/trait.ToString.html) and [`FromStr`](https://doc.rust-lang.org/std/str/trait.FromStr.html).
+
 [![Last commit](https://img.shields.io/github/last-commit/eigenein/kv-derive?logo=github)](https://github.com/eigenein/kv-derive/commits/master)
 [![Build status](https://github.com/eigenein/kv-derive/actions/workflows/check.yaml/badge.svg)](https://github.com/eigenein/kv-derive/actions)
 
-## Example
+## Examples
 
 ### `#[derive(ToVec)]`
 
@@ -38,3 +40,5 @@ let actual = Foo::from_iter(vec![("bar", "42"), ("qux", "quuux")]).unwrap();
 let expected = Foo { bar: 42, qux: "quuux".into() };
 assert_eq!(actual, expected);
 ```
+
+`FromIter` requires that the deriving struct implements [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html) because some fields may be missing in the iterator.

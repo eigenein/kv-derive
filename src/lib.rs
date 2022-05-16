@@ -12,8 +12,7 @@ mod field;
 mod from_iter;
 mod to_vec;
 
-#[doc(hidden)]
-#[allow(missing_docs)]
+/// Generates `fn to_vec(&self) -> Vec<&'static str, String> {...}`.
 #[proc_macro_derive(ToVec, attributes(kv))]
 pub fn to_vec(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).expect("failed to parse the input");
@@ -43,10 +42,9 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
     tokens.into()
 }
 
-#[doc(hidden)]
-#[allow(missing_docs)]
+/// Generates `fn from_iter(iter: IntoIterator<...>) -> anyhow::Result<Self> {...}`.
 #[proc_macro_derive(FromIter, attributes(kv))]
-pub fn from_slice(input: TokenStream) -> TokenStream {
+pub fn from_iter(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).expect("failed to parse the input");
     let opts = FromSliceOpts::from_derive_input(&ast).expect("failed to parse the struct options");
 
