@@ -9,4 +9,13 @@ license = "MIT"
 keywords = ["derive", "macro"]
 categories = ["rust-patterns"]
 
+[lib]
+proc-macro = true
+
+[features]
+default = []
+
 [dependencies]
+darling = "0.14.1"
+syn = "1.0.94"
+quote = "1.0.18"
