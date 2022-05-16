@@ -1,5 +1,6 @@
 [package]
 name = "kv-derive"
+description = "Derive struct conversions from and to key-value vectors"
 version = "0.1.0-alpha.1"
 edition = "2021"
 authors = ["Pavel Perestoronin <eigenein@gmail.com>"]
