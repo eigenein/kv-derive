@@ -29,7 +29,7 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
         let ty = field.ty;
         let key = format!("{}", ident);
         quote! {
-            let value = <#ty as alloc::string::ToString>::(self.#ident);
+            let value = <#ty as std::string::ToString>::to_string(&self.#ident);
             pairs.push((#key, value));
         }
     });
@@ -58,9 +58,9 @@ pub fn from_slice(input: TokenStream) -> TokenStream {
 
     let tokens = quote! {
         impl #generics #ident {
-            pub fn from_slice(slice: &[()]) -> ::anyhow::Result<Self>
+            pub fn from_slice<'a>(slice: impl std::iter::IntoIterator<Item = &'a (&'a str, &'a str)>) -> ::anyhow::Result<Self>
             where
-                Self: core::default::Default
+                Self: std::default::Default,
             {
                 Ok(Self::default())
             }
