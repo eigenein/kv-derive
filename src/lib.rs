@@ -3,11 +3,11 @@ use darling::FromDeriveInput;
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::from_slice::FromSliceOpts;
+use crate::from_iter::FromSliceOpts;
 use crate::to_vec::ToVecOpts;
 
 mod field;
-mod from_slice;
+mod from_iter;
 mod to_vec;
 
 #[doc(hidden)]
@@ -29,8 +29,7 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
         let ty = field.ty;
         let key = format!("{}", ident);
         quote! {
-            let value = <#ty as std::string::ToString>::to_string(&self.#ident);
-            pairs.push((#key, value));
+            pairs.push((#key, <#ty as std::string::ToString>::to_string(&self.#ident)));
         }
     });
 
@@ -48,7 +47,7 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
 
 #[doc(hidden)]
 #[allow(missing_docs)]
-#[proc_macro_derive(FromSlice, attributes(kv))]
+#[proc_macro_derive(FromIter, attributes(kv))]
 pub fn from_slice(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).expect("failed to parse the input");
     let opts = FromSliceOpts::from_derive_input(&ast).expect("failed to parse the struct options");
@@ -56,13 +55,33 @@ pub fn from_slice(input: TokenStream) -> TokenStream {
     let ident = opts.ident;
     let generics = opts.generics;
 
+    let fields = match opts.data {
+        Data::Enum(_) => unimplemented!("enums are not implemented"),
+        Data::Struct(fields) => fields.fields,
+    };
+    let match_and_set = fields.into_iter().map(|field| {
+        let ident = field.ident.expect("unnamed fields are not implemented");
+        let ty = field.ty;
+        let key = format!("{}", ident);
+        quote! {
+            #key => { this.#ident = <#ty as std::str::FromStr>::from_str(value)?; }
+        }
+    });
+
     let tokens = quote! {
         impl #generics #ident {
-            pub fn from_slice<'a>(slice: impl std::iter::IntoIterator<Item = &'a (&'a str, &'a str)>) -> ::anyhow::Result<Self>
+            pub fn from_iter<'a>(iter: impl std::iter::IntoIterator<Item = (&'a str, &'a str)>) -> ::anyhow::Result<Self>
             where
                 Self: std::default::Default,
             {
-                Ok(Self::default())
+                let mut this = Self::default();
+                for (key, value) in iter.into_iter() {
+                    match key {
+                        #(#match_and_set)*
+                        _ => {}
+                    }
+                }
+                Ok(this)
             }
         }
     };
