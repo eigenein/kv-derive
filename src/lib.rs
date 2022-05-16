@@ -2,9 +2,12 @@ use darling::ast::Data;
 use darling::FromDeriveInput;
 use proc_macro::TokenStream;
 use quote::quote;
-use to_vec::ToVecOpts;
+
+use crate::from_slice::FromSliceOpts;
+use crate::to_vec::ToVecOpts;
 
 mod field;
+mod from_slice;
 mod to_vec;
 
 #[doc(hidden)]
@@ -23,9 +26,11 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
     };
     let push_fields = fields.into_iter().map(|field| {
         let ident = field.ident.expect("unnamed fields are not implemented");
+        let ty = field.ty;
         let key = format!("{}", ident);
         quote! {
-            pairs.push((#key, self.#ident.to_string()));
+            let value = <#ty as alloc::string::ToString>::(self.#ident);
+            pairs.push((#key, value));
         }
     });
 
@@ -39,4 +44,39 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
         }
     };
     tokens.into()
+}
+
+#[doc(hidden)]
+#[allow(missing_docs)]
+#[proc_macro_derive(FromSlice, attributes(kv))]
+pub fn from_slice(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).expect("failed to parse the input");
+    let opts = FromSliceOpts::from_derive_input(&ast).expect("failed to parse the struct options");
+
+    let ident = opts.ident;
+    let generics = opts.generics;
+
+    let tokens = quote! {
+        impl #generics #ident {
+            pub fn from_slice(slice: &[()]) -> ::anyhow::Result<Self>
+            where
+                Self: core::default::Default
+            {
+                Ok(Self::default())
+            }
+        }
+    };
+    tokens.into()
+}
+
+#[cfg(doctest)]
+mod test_readme {
+    macro_rules! external_doc_test {
+        ($x:expr) => {
+            #[doc = $x]
+            extern "C" {}
+        };
+    }
+
+    external_doc_test!(include_str!("../README.md"));
 }

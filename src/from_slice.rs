@@ -7,7 +7,7 @@ use crate::field::Field;
 
 #[derive(FromDeriveInput)]
 #[darling(supports(struct_named, struct_unit), forward_attrs(allow, doc, cfg))]
-pub(crate) struct ToVecOpts {
+pub(crate) struct FromSliceOpts {
     pub ident: Ident,
     pub generics: Generics,
     pub data: Data<Ignored, Field>,
