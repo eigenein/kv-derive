@@ -1,0 +1,12 @@
+[package]
+name = "kv-derive"
+version = "0.1.0"
+edition = "2021"
+authors = ["Pavel Perestoronin <eigenein@gmail.com>"]
+readme = "README.md"
+repository = "https://github.com/eigenein/kv-derive"
+license = "MIT"
+keywords = ["derive", "macro"]
+categories = ["rust-patterns"]
+
+[dependencies]
