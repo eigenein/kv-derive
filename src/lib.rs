@@ -1,10 +1,10 @@
 use darling::ast::Data;
+use darling::util::Ignored;
 use darling::FromDeriveInput;
 use proc_macro::TokenStream;
-use darling::util::Ignored;
 use quote::quote;
-use crate::field::Field;
 
+use crate::field::Field;
 use crate::from_iter::FromSliceOpts;
 use crate::to_vec::ToVecOpts;
 
