@@ -20,8 +20,8 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
     let produce_fields = generate_produce_fields(&get_fields(opts.data));
 
     let tokens = quote! {
-        impl #generics #ident {
-            pub fn to_vec(&self) -> std::vec::Vec<(&'static str, String)> {
+        impl #generics ::kv_derive_impl::ToVec for #ident {
+            fn to_vec(&self) -> std::vec::Vec<(String, String)> {
                 let mut pairs = std::vec::Vec::new();
                 #(#produce_fields)*
                 pairs

@@ -1,4 +1,4 @@
-use darling::FromField;
+use darling::{FromField, FromMeta};
 use syn::Ident;
 
 #[derive(FromField)]
@@ -9,6 +9,15 @@ pub(crate) struct Field {
     /// Use the specified key instead of the field identifier.
     #[darling(default, rename = "rename")]
     pub custom_key: Option<String>,
+
+    #[darling(default)]
+    pub flatten: Option<FlattenOpts>,
+}
+
+#[derive(Default, FromMeta)]
+#[darling(default)]
+pub(crate) struct FlattenOpts {
+    pub prefix: Option<String>,
 }
 
 impl Field {

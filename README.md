@@ -13,6 +13,7 @@ Derive `struct` conversions from and to key-value vectors using [`ToString`](htt
 
 ```rust
 use kv_derive::ToVec;
+use kv_derive_impl::ToVec;
 
 #[derive(ToVec)]
 struct Foo {
@@ -22,8 +23,8 @@ struct Foo {
 
 let foo = Foo { bar: 42, qux: "qux".into() };
 assert_eq!(foo.to_vec(), vec![
-    ("bar", "42".into()),
-    ("qux", "qux".into()),
+    ("bar".into(), "42".into()),
+    ("qux".into(), "qux".into()),
 ]);
 ```
 
@@ -57,6 +58,7 @@ assert_eq!(actual, expected);
 
 ```rust
 use kv_derive::ToVec;
+use kv_derive_impl::ToVec;
 
 #[derive(ToVec)]
 struct Foo {
@@ -65,7 +67,7 @@ struct Foo {
 }
 
 let foo = Foo { bar: Some(42), qux: None };
-assert_eq!(foo.to_vec(), vec![("bar", "42".into())]);
+assert_eq!(foo.to_vec(), vec![("bar".into(), "42".into())]);
 ```
 
 and left out with their defaults while converting back to the struct:
@@ -92,6 +94,7 @@ Collection field emits multiple entries with the same key:
 
 ```rust
 use kv_derive::ToVec;
+use kv_derive_impl::ToVec;
 
 #[derive(ToVec)]
 struct Foo {
@@ -99,7 +102,10 @@ struct Foo {
 }
 
 let foo = Foo { bar: vec![42, 100500] };
-assert_eq!(foo.to_vec(), vec![("bar", "42".into()), ("bar", "100500".into())]);
+assert_eq!(foo.to_vec(), vec![
+    ("bar".into(), "42".into()),
+    ("bar".into(), "100500".into()),
+]);
 ```
 
 which can be recollected back:
@@ -125,6 +131,7 @@ Uses the specified key instead of the identifier:
 
 ```rust
 use kv_derive::ToVec;
+use kv_derive_impl::ToVec;
 
 #[derive(ToVec)]
 struct Foo {
@@ -133,5 +140,26 @@ struct Foo {
 }
 
 let foo = Foo { bar: 42 };
-assert_eq!(foo.to_vec(), vec![("qux", "42".into())]);
+assert_eq!(foo.to_vec(), vec![("qux".into(), "42".into())]);
+```
+
+## Flattening
+
+```rust
+use kv_derive::ToVec;
+use kv_derive_impl::ToVec;
+
+#[derive(ToVec)]
+struct Bar {
+    qux: i32,
+}
+
+#[derive(ToVec)]
+struct Foo {
+    #[kv(flatten())]
+    bar: Bar,
+}
+
+let foo = Foo { bar: Bar { qux: 42 } };
+assert_eq!(foo.to_vec(), vec![("qux".into(), "42".into())]);
 ```

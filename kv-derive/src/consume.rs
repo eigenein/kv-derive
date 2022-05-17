@@ -12,6 +12,6 @@ fn generate_consume_field(field: &Field) -> TokenStream {
     let key = field.get_key();
 
     quote! {
-        #key => { kv_derive_impl::Consumer::consume(&mut this.#ident, value)?; }
+        #key => { kv_derive_impl::consumer::Consumer::consume(&mut this.#ident, value)?; }
     }
 }
