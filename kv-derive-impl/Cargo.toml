@@ -14,3 +14,4 @@ categories = []
 default = []
 
 [dependencies]
+anyhow = "1.0.57"

@@ -22,7 +22,7 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
         let ty = &field.ty;
         let key = field.get_key().unwrap();
         quote! {
-            pairs.push((#key, <#ty as std::string::ToString>::to_string(&self.#ident)));
+            pairs.push((#key, <#ty as ::kv_derive_impl::ToRepr>::to_repr(&self.#ident)));
         }
     });
 
@@ -54,7 +54,7 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
         let ty = &field.ty;
         let key = field.get_key().unwrap();
         quote! {
-            #key => { this.#ident = <#ty as std::str::FromStr>::from_str(value)?; }
+            #key => { this.#ident = <#ty as ::kv_derive_impl::FromRepr>::from_repr(value)?; }
         }
     });
 
