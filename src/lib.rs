@@ -13,8 +13,6 @@ mod opts;
 #[proc_macro_derive(ToVec, attributes(kv))]
 pub fn to_vec(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input).unwrap();
-    let ident = opts.ident;
-    let generics = opts.generics;
 
     let push_fields = get_fields(opts.data).into_iter().map(|field| {
         let ident = field.ident.expect("unnamed fields are not implemented");
@@ -24,6 +22,9 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
             pairs.push((#key, <#ty as std::string::ToString>::to_string(&self.#ident)));
         }
     });
+
+    let ident = opts.ident;
+    let generics = opts.generics;
 
     let tokens = quote! {
         impl #generics #ident {
@@ -41,8 +42,6 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(FromIter, attributes(kv))]
 pub fn from_iter(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input).unwrap();
-    let ident = opts.ident;
-    let generics = opts.generics;
 
     let match_and_set = get_fields(opts.data).into_iter().map(|field| {
         let ident = field.ident.expect("unnamed fields are not implemented");
@@ -52,6 +51,9 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
             #key => { this.#ident = <#ty as std::str::FromStr>::from_str(value)?; }
         }
     });
+
+    let ident = opts.ident;
+    let generics = opts.generics;
 
     let tokens = quote! {
         impl #generics #ident {
