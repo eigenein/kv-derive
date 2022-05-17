@@ -2,7 +2,7 @@ use quote::quote;
 
 use crate::Field;
 
-pub(crate) fn generate_produce_fields(fields: &[Field]) -> Vec<proc_macro2::TokenStream> {
+pub(crate) fn generate_consume_fields(fields: &[Field]) -> Vec<proc_macro2::TokenStream> {
     fields
         .iter()
         .map(|field| {
@@ -13,7 +13,7 @@ pub(crate) fn generate_produce_fields(fields: &[Field]) -> Vec<proc_macro2::Toke
             let key = field.get_key();
 
             quote! {
-                ::kv_derive_impl::Producer::produce(&self.#ident, &mut pairs, #key);
+                #key => { kv_derive_impl::Consumer::consume(&mut this.#ident, value)?; }
             }
         })
         .collect()

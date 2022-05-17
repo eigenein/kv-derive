@@ -1,10 +1,12 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
+use crate::consume::generate_consume_fields;
 use crate::field::Field;
 use crate::opts::{get_fields, MacroOpts};
-use crate::produce::produce_fields;
+use crate::produce::generate_produce_fields;
 
+mod consume;
 mod field;
 mod opts;
 mod produce;
@@ -15,7 +17,7 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
     let ident = opts.ident;
     let generics = opts.generics;
-    let produce_fields = produce_fields(&get_fields(opts.data));
+    let produce_fields = generate_produce_fields(&get_fields(opts.data));
 
     let tokens = quote! {
         impl #generics #ident {
@@ -35,19 +37,7 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
     let ident = opts.ident;
     let generics = opts.generics;
-    let fields = get_fields(opts.data);
-
-    let consume_fields = fields.into_iter().map(|field| {
-        let ident = field
-            .ident
-            .as_ref()
-            .expect("unnamed fields are not implemented");
-        let key = field.get_key();
-
-        quote! {
-            #key => { kv_derive_impl::Consumer::consume(&mut this.#ident, value)?; }
-        }
-    });
+    let consume_fields = generate_consume_fields(&get_fields(opts.data));
 
     let tokens = quote! {
         impl #generics #ident {
