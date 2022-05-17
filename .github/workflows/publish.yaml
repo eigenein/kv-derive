@@ -46,7 +46,7 @@ jobs:
         run: |
           cargo login
           cargo publish --allow-dirty -p kv-derive-impl
-          rm Cargo.lock
+          cargo search kv-derive-impl
           cargo publish --allow-dirty -p kv-derive
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
