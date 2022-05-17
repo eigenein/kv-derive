@@ -40,9 +40,11 @@ struct Foo {
     qux: String,
 }
 
-let actual = Foo::from_iter(vec![("bar", "42"), ("qux", "quuux")]).unwrap();
+let actual = Foo::from_iter(vec![("bar", "42"), ("qux", "quuux")])?;
 let expected = Foo { bar: 42, qux: "quuux".into() };
 assert_eq!(actual, expected);
+
+# ::kv_derive_impl::Result::Ok(())
 ```
 
 `FromIter` requires that the deriving struct implements [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html).
@@ -77,9 +79,11 @@ struct Foo {
     qux: Option<i32>,
 }
 
-let actual = Foo::from_iter(vec![("bar", "42")]).unwrap();
+let actual = Foo::from_iter(vec![("bar", "42")])?;
 let expected = Foo { bar: Some(42), qux: None };
 assert_eq!(actual, expected);
+
+# ::kv_derive_impl::Result::Ok(())
 ```
 
 ### Collection fields
@@ -96,6 +100,23 @@ struct Foo {
 
 let foo = Foo { bar: vec![42, 100500] };
 assert_eq!(foo.to_vec(), vec![("bar", "42".into()), ("bar", "100500".into())]);
+```
+
+which can be recollected back:
+
+```rust
+use kv_derive::FromIter;
+
+#[derive(FromIter, Default, Debug, PartialEq)]
+struct Foo {
+    bar: Vec<i32>,
+}
+
+let actual = Foo::from_iter(vec![("bar", "42".into()), ("bar", "100500".into())])?;
+let expected = Foo { bar: vec![42, 100500] };
+assert_eq!(actual, expected);
+
+# ::kv_derive_impl::Result::Ok(())
 ```
 
 ### Renaming fields with `kv(rename = …)`

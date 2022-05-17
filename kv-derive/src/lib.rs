@@ -63,7 +63,7 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
 
     let tokens = quote! {
         impl #generics #ident {
-            pub fn from_iter<'a>(iter: impl std::iter::IntoIterator<Item = (&'a str, &'a str)>) -> ::anyhow::Result<Self>
+            pub fn from_iter<'a>(iter: impl std::iter::IntoIterator<Item = (&'a str, &'a str)>) -> ::kv_derive_impl::Result<Self>
             where
                 Self: std::default::Default,
             {

@@ -21,3 +21,10 @@ impl<T: FromRepr> Consumer for Option<T> {
         Ok(())
     }
 }
+
+impl<T: FromRepr> Consumer for Vec<T> {
+    fn consume(&mut self, value: &str) -> Result<()> {
+        self.push(T::from_repr(value)?);
+        Ok(())
+    }
+}
