@@ -49,6 +49,39 @@ assert_eq!(actual, expected);
 
 ## Customizing fields
 
+### Optional fields
+
+`Option<T>` fields are skipped while converting to a vector:
+
+```rust
+use kv_derive::ToVec;
+
+#[derive(ToVec)]
+struct Foo {
+    bar: Option<i32>,
+    qux: Option<i32>,
+}
+
+let foo = Foo { bar: Some(42), qux: None };
+assert_eq!(foo.to_vec(), vec![("bar", "42".into())]);
+```
+
+and left out with their defaults while converting back to the struct:
+
+```rust
+use kv_derive::FromIter;
+
+#[derive(FromIter, Default, Debug, PartialEq)]
+struct Foo {
+    bar: Option<i32>,
+    qux: Option<i32>,
+}
+
+let actual = Foo::from_iter(vec![("bar", "42")]).unwrap();
+let expected = Foo { bar: Some(42), qux: None };
+assert_eq!(actual, expected);
+```
+
 ### `kv(rename = …)`
 
 Uses the specified key instead of the identifier:

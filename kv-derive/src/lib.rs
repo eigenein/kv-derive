@@ -22,7 +22,7 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
         let key = field.get_key().unwrap();
 
         quote! {
-            pairs.push((#key, ::kv_derive_impl::ToRepr::to_repr(&self.#ident)));
+            ::kv_derive_impl::Producer::produce(&self.#ident, &mut pairs, #key);
         }
     });
 
@@ -54,7 +54,7 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
         let key = field.get_key().unwrap();
 
         quote! {
-            #key => { this.#ident = ::kv_derive_impl::FromRepr::from_repr(value)?; }
+            #key => { kv_derive_impl::Consumer::consume(&mut this.#ident, value)?; }
         }
     });
 
