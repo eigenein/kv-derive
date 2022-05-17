@@ -1,39 +1,27 @@
-use darling::ast::Data;
-use darling::util::Ignored;
 use proc_macro::TokenStream;
 use quote::quote;
 
 use crate::field::Field;
-use crate::opts::MacroOpts;
+use crate::opts::{get_fields, MacroOpts};
+use crate::produce::produce_fields;
 
 mod field;
 mod opts;
+mod produce;
 
 /// Generates `fn to_vec(&self) -> Vec<&'static str, String> {...}`.
 #[proc_macro_derive(ToVec, attributes(kv))]
 pub fn to_vec(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
-
-    let push_fields = get_fields(opts.data).into_iter().map(|field| {
-        let ident = field
-            .ident
-            .as_ref()
-            .expect("unnamed fields are not implemented");
-        let key = field.get_key();
-
-        quote! {
-            ::kv_derive_impl::Producer::produce(&self.#ident, &mut pairs, #key);
-        }
-    });
-
     let ident = opts.ident;
     let generics = opts.generics;
+    let produce_fields = produce_fields(&get_fields(opts.data));
 
     let tokens = quote! {
         impl #generics #ident {
             pub fn to_vec(&self) -> std::vec::Vec<(&'static str, String)> {
                 let mut pairs = std::vec::Vec::new();
-                #(#push_fields)*
+                #(#produce_fields)*
                 pairs
             }
         }
@@ -45,8 +33,11 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(FromIter, attributes(kv))]
 pub fn from_iter(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
+    let ident = opts.ident;
+    let generics = opts.generics;
+    let fields = get_fields(opts.data);
 
-    let match_and_set = get_fields(opts.data).into_iter().map(|field| {
+    let consume_fields = fields.into_iter().map(|field| {
         let ident = field
             .ident
             .as_ref()
@@ -58,9 +49,6 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
         }
     });
 
-    let ident = opts.ident;
-    let generics = opts.generics;
-
     let tokens = quote! {
         impl #generics #ident {
             pub fn from_iter<'a>(iter: impl std::iter::IntoIterator<Item = (&'a str, &'a str)>) -> ::kv_derive_impl::Result<Self>
@@ -70,7 +58,7 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
                 let mut this = Self::default();
                 for (key, value) in iter.into_iter() {
                     match key {
-                        #(#match_and_set)*
+                        #(#consume_fields)*
                         _ => {}
                     }
                 }
@@ -79,13 +67,6 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
         }
     };
     tokens.into()
-}
-
-fn get_fields(data: Data<Ignored, Field>) -> Vec<Field> {
-    match data {
-        Data::Enum(_) => unimplemented!("enums are not implemented"),
-        Data::Struct(fields) => fields.fields,
-    }
 }
 
 #[cfg(doctest)]

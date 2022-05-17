@@ -21,3 +21,10 @@ impl MacroOpts {
         Self::from_derive_input(&ast).expect("failed to parse the macro options")
     }
 }
+
+pub(crate) fn get_fields(data: Data<Ignored, Field>) -> Vec<Field> {
+    match data {
+        Data::Enum(_) => unimplemented!("enums are not implemented"),
+        Data::Struct(fields) => fields.fields,
+    }
+}

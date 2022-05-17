@@ -18,7 +18,8 @@ default = []
 
 [dependencies]
 darling = "0.14.1"
-syn = "1.0.94"
+proc-macro2 = "1.0.39"
 quote = "1.0.18"
+syn = "1.0.94"
 
 kv-derive-impl = { version = "0.0.0", path = "../kv-derive-impl" }
