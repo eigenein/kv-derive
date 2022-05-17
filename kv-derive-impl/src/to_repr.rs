@@ -16,6 +16,7 @@ macro_rules! impl_repr {
 
 impl_repr!(String);
 impl_repr!(&str);
+
 impl_repr!(i8);
 impl_repr!(u8);
 impl_repr!(i16);
@@ -28,3 +29,6 @@ impl_repr!(i128);
 impl_repr!(u128);
 impl_repr!(isize);
 impl_repr!(usize);
+
+impl_repr!(f32);
+impl_repr!(f64);
