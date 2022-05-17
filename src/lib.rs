@@ -5,18 +5,16 @@ use proc_macro::TokenStream;
 use quote::quote;
 
 use crate::field::Field;
-use crate::from_iter::FromSliceOpts;
-use crate::to_vec::ToVecOpts;
+use crate::opts::MacroOpts;
 
 mod field;
-mod from_iter;
-mod to_vec;
+mod opts;
 
 /// Generates `fn to_vec(&self) -> Vec<&'static str, String> {...}`.
 #[proc_macro_derive(ToVec, attributes(kv))]
 pub fn to_vec(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).expect("failed to parse the input");
-    let opts = ToVecOpts::from_derive_input(&ast).expect("failed to parse the struct options");
+    let opts = MacroOpts::from_derive_input(&ast).expect("failed to parse the struct options");
 
     let ident = opts.ident;
     let generics = opts.generics;
@@ -46,7 +44,7 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(FromIter, attributes(kv))]
 pub fn from_iter(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).expect("failed to parse the input");
-    let opts = FromSliceOpts::from_derive_input(&ast).expect("failed to parse the struct options");
+    let opts = MacroOpts::from_derive_input(&ast).expect("failed to parse the struct options");
 
     let ident = opts.ident;
     let generics = opts.generics;
