@@ -20,7 +20,7 @@ jobs:
       - name: Set the versions
         run: |
           sed -i -e 's/version = "0\.0\.0"/version = "${{ github.ref_name }}"/g' */Cargo.toml
-          sed -i -e 's/version = "\*"/version = "= ${{ github.ref_name }}"/g' */Cargo.toml
+          sed -i -e 's/version = "\*"/version = "${{ github.ref_name }}"/g' */Cargo.toml
 
       - name: Rustup
         uses: actions-rs/toolchain@v1
@@ -46,7 +46,6 @@ jobs:
         run: |
           cargo login
           cargo publish --allow-dirty -p kv-derive-impl
-          cargo update
           cat kv-derive/Cargo.toml
           cargo publish --allow-dirty -p kv-derive
         env:
