@@ -15,9 +15,12 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input).unwrap();
 
     let push_fields = get_fields(opts.data).into_iter().map(|field| {
-        let ident = field.ident.expect("unnamed fields are not implemented");
-        let ty = field.ty;
-        let key = format!("{}", ident);
+        let ident = field
+            .ident
+            .as_ref()
+            .expect("unnamed fields are not implemented");
+        let ty = &field.ty;
+        let key = field.get_key().unwrap();
         quote! {
             pairs.push((#key, <#ty as std::string::ToString>::to_string(&self.#ident)));
         }
@@ -44,9 +47,12 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input).unwrap();
 
     let match_and_set = get_fields(opts.data).into_iter().map(|field| {
-        let ident = field.ident.expect("unnamed fields are not implemented");
-        let ty = field.ty;
-        let key = format!("{}", ident);
+        let ident = field
+            .ident
+            .as_ref()
+            .expect("unnamed fields are not implemented");
+        let ty = &field.ty;
+        let key = field.get_key().unwrap();
         quote! {
             #key => { this.#ident = <#ty as std::str::FromStr>::from_str(value)?; }
         }
