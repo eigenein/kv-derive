@@ -4,9 +4,13 @@ on:
   release:
     types: ["published"]
 
+permissions:
+  contents: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2
