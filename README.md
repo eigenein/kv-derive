@@ -28,8 +28,6 @@ assert_eq!(foo.to_vec(), vec![
 ]);
 ```
 
-Any type implementing `ToString` is supported.
-
 ### `#[derive(FromIter)]`
 
 ```rust
