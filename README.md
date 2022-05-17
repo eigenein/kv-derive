@@ -82,7 +82,23 @@ let expected = Foo { bar: Some(42), qux: None };
 assert_eq!(actual, expected);
 ```
 
-### `kv(rename = …)`
+### Collection fields
+
+Collection field emits multiple entries with the same key:
+
+```rust
+use kv_derive::ToVec;
+
+#[derive(ToVec)]
+struct Foo {
+    bar: Vec<i32>,
+}
+
+let foo = Foo { bar: vec![42, 100500] };
+assert_eq!(foo.to_vec(), vec![("bar", "42".into()), ("bar", "100500".into())]);
+```
+
+### Renaming fields with `kv(rename = …)`
 
 Uses the specified key instead of the identifier:
 

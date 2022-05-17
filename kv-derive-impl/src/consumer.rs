@@ -1,6 +1,9 @@
 use crate::result::Result;
 use crate::FromRepr;
 
+/// Responsible for consuming the string value and modifying itself accordingly.
+///
+/// May consume one or more entries.
 pub trait Consumer {
     fn consume(&mut self, value: &str) -> Result<()>;
 }
