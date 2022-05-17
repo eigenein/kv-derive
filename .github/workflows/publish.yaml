@@ -1,0 +1,54 @@
+name: Publish
+
+on:
+  release:
+    types: ["published"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set the version
+        run: |
+          echo 'version = "${{ github.ref_name }}"'
+          sed -i -e 's/version = "0.0.0"/version = "${{ github.ref_name }}"/g' Cargo.toml
+
+      - name: Rustup
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Build the changelog
+        id: changelog
+        uses: Bullrich/generate-release-changelog@master
+        env:
+          REPO: ${{ github.repository }}
+
+      - name: Update the release
+        uses: tubone24/update_release@v1.3.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          body: ${{ steps.changelog.outputs.changelog }}
+          prerelease: false
+
+      - name: Await the checks
+        uses: lewagon/wait-on-check-action@v1.0.0
+        with:
+          ref: ${{ github.ref }}
+          check-name: Check
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+
+      - name: Publish the crate
+        run: |
+          cargo login
+          cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
