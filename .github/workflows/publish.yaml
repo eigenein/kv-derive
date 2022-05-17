@@ -42,11 +42,12 @@ jobs:
           body: ${{ steps.changelog.outputs.changelog }}
           prerelease: false
 
-      - name: Publish kv-derive-impl
+      - name: Publish the crates
         run: |
           cargo login
           cargo publish --allow-dirty -p kv-derive-impl
-          cargo search kv-derive-impl
+          cargo update
+          cat kv-derive/Cargo.toml
           cargo publish --allow-dirty -p kv-derive
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
