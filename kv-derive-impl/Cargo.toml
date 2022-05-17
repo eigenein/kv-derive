@@ -1,0 +1,16 @@
+[package]
+name = "kv-derive-impl"
+description = "Derive struct conversions from and to key-value vectors"
+version = "0.0.0"
+edition = "2021"
+authors = ["Pavel Perestoronin <eigenein@gmail.com>"]
+readme = "README.md"
+repository = "https://github.com/eigenein/kv-derive"
+license = "MIT"
+keywords = ["struct", "key-value"]
+categories = []
+
+[features]
+default = []
+
+[dependencies]
