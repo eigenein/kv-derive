@@ -23,6 +23,3 @@ syn = "1.0.94"
 quote = "1.0.18"
 
 kv-derive-impl = { version = "0.0.0", path = "../kv-derive-impl" }
-
-[patch.crates-io]
-kv-derive-impl = { path = "../kv-derive-impl" }

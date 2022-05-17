@@ -1,2 +1,5 @@
 [workspace]
 members = ["kv-derive", "kv-derive-impl"]
+
+[patch.crates-io]
+kv-derive-impl = { path = "kv-derive-impl" }
