@@ -2,8 +2,10 @@
 
 Derive `struct` conversions from and to key-value vectors using [`ToString`](https://doc.rust-lang.org/std/string/trait.ToString.html) and [`FromStr`](https://doc.rust-lang.org/std/str/trait.FromStr.html).
 
+[![Crates.io](https://img.shields.io/crates/v/kv-derive)](https://crates.io/crates/kv-derive)
 [![Last commit](https://img.shields.io/github/last-commit/eigenein/kv-derive?logo=github)](https://github.com/eigenein/kv-derive/commits/master)
 [![Build status](https://github.com/eigenein/kv-derive/actions/workflows/check.yaml/badge.svg)](https://github.com/eigenein/kv-derive/actions)
+![License: MIT](https://img.shields.io/crates/l/kv-derive)
 
 ## Examples
 
