@@ -45,33 +45,9 @@ let expected = Foo { bar: 42, qux: "quuux".into() };
 assert_eq!(actual, expected);
 ```
 
-Any type implementing `FromStr` is supported.
-
-`FromIter` additionally requires that the deriving struct implements [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html).
+`FromIter` requires that the deriving struct implements [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html).
 
 ## Customizing fields
-
-### Optional field
-
-```rust
-use kv_derive::{ToVec, FromIter};
-
-#[derive(ToVec, FromIter, Default, Debug, PartialEq)]
-struct Foo {
-    #[kv(optional)]
-    bar: Option<i32>,
-
-    #[kv(optional)]
-    qux: Option<i32>,
-}
-
-let foo = Foo { bar: Some(42), qux: None };
-assert_eq!(foo.to_vec(), vec![("bar", "42".into())]);
-
-let actual = Foo::from_iter(vec![("qux", "42")]).unwrap();
-let expected = Foo { bar: None, qux: Some(42) };
-assert_eq!(actual, expected);
-```
 
 ### `kv(rename = …)`
 

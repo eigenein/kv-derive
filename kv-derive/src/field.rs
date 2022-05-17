@@ -10,9 +10,6 @@ pub(crate) struct Field {
     /// Use the specified key instead of the field identifier.
     #[darling(default, rename = "rename")]
     pub custom_key: Option<String>,
-
-    #[darling(default, rename = "optional")]
-    pub is_optional: bool,
 }
 
 impl Field {

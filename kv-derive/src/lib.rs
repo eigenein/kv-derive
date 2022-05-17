@@ -21,14 +21,8 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
             .expect("unnamed fields are not implemented");
         let key = field.get_key().unwrap();
 
-        if !field.is_optional {
-            quote! { pairs.push((#key, ::kv_derive_impl::ToRepr::to_repr(&self.#ident))); }
-        } else {
-            quote! {
-                if let Some(value) = &self.#ident {
-                    pairs.push((#key, ::kv_derive_impl::ToRepr::to_repr(value)));
-                }
-            }
+        quote! {
+            pairs.push((#key, ::kv_derive_impl::ToRepr::to_repr(&self.#ident)));
         }
     });
 
@@ -59,14 +53,8 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
             .expect("unnamed fields are not implemented");
         let key = field.get_key().unwrap();
 
-        if !field.is_optional {
-            quote! {
-                #key => { this.#ident = ::kv_derive_impl::FromRepr::from_repr(value)?; }
-            }
-        } else {
-            quote! {
-                #key => { this.#ident = Some(::kv_derive_impl::FromRepr::from_repr(value)?); }
-            }
+        quote! {
+            #key => { this.#ident = ::kv_derive_impl::FromRepr::from_repr(value)?; }
         }
     });
 
