@@ -8,10 +8,7 @@ pub(crate) fn generate_consume_fields(fields: &[Field]) -> Vec<TokenStream> {
 }
 
 fn generate_consume_field(field: &Field) -> TokenStream {
-    let ident = field
-        .ident
-        .as_ref()
-        .expect("unnamed fields are not implemented");
+    let ident = field.get_ident();
     let key = field.get_key();
 
     quote! {

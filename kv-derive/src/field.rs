@@ -21,4 +21,10 @@ impl Field {
         }
         panic!("the field is missing the identifier, did you mean to use `kv(rename = ...)`?")
     }
+
+    pub fn get_ident(&self) -> &Ident {
+        self.ident
+            .as_ref()
+            .expect("unnamed fields are not implemented")
+    }
 }
