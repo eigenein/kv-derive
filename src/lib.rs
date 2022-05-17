@@ -1,6 +1,5 @@
 use darling::ast::Data;
 use darling::util::Ignored;
-use darling::FromDeriveInput;
 use proc_macro::TokenStream;
 use quote::quote;
 
@@ -13,9 +12,7 @@ mod opts;
 /// Generates `fn to_vec(&self) -> Vec<&'static str, String> {...}`.
 #[proc_macro_derive(ToVec, attributes(kv))]
 pub fn to_vec(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).expect("failed to parse the input");
-    let opts = MacroOpts::from_derive_input(&ast).expect("failed to parse the struct options");
-
+    let opts = MacroOpts::parse(input).unwrap();
     let ident = opts.ident;
     let generics = opts.generics;
 
@@ -43,9 +40,7 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
 /// Generates `fn from_iter(iter: IntoIterator<...>) -> anyhow::Result<Self> {...}`.
 #[proc_macro_derive(FromIter, attributes(kv))]
 pub fn from_iter(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).expect("failed to parse the input");
-    let opts = MacroOpts::from_derive_input(&ast).expect("failed to parse the struct options");
-
+    let opts = MacroOpts::parse(input).unwrap();
     let ident = opts.ident;
     let generics = opts.generics;
 
