@@ -17,7 +17,6 @@ proc-macro = true
 default = []
 
 [dependencies]
-anyhow = "1.0.57"
 darling = "0.14.1"
 syn = "1.0.94"
 quote = "1.0.18"

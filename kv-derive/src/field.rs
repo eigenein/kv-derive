@@ -1,4 +1,3 @@
-use anyhow::{bail, Result};
 use darling::FromField;
 use syn::Ident;
 
@@ -13,13 +12,13 @@ pub(crate) struct Field {
 }
 
 impl Field {
-    pub fn get_key(&self) -> Result<String> {
+    pub fn get_key(&self) -> String {
         if let Some(custom_key) = &self.custom_key {
-            return Ok(custom_key.clone());
+            return custom_key.clone();
         }
         if let Some(ident) = &self.ident {
-            return Ok(format!("{}", ident));
+            return format!("{}", ident);
         }
-        bail!("the field is missing the identifier, did you mean to use `kv(rename = ...)`?")
+        panic!("the field is missing the identifier, did you mean to use `kv(rename = ...)`?")
     }
 }

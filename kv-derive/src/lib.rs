@@ -12,14 +12,14 @@ mod opts;
 /// Generates `fn to_vec(&self) -> Vec<&'static str, String> {...}`.
 #[proc_macro_derive(ToVec, attributes(kv))]
 pub fn to_vec(input: TokenStream) -> TokenStream {
-    let opts = MacroOpts::parse(input).unwrap();
+    let opts = MacroOpts::parse(input);
 
     let push_fields = get_fields(opts.data).into_iter().map(|field| {
         let ident = field
             .ident
             .as_ref()
             .expect("unnamed fields are not implemented");
-        let key = field.get_key().unwrap();
+        let key = field.get_key();
 
         quote! {
             ::kv_derive_impl::Producer::produce(&self.#ident, &mut pairs, #key);
@@ -44,14 +44,14 @@ pub fn to_vec(input: TokenStream) -> TokenStream {
 /// Generates `fn from_iter(iter: IntoIterator<...>) -> anyhow::Result<Self> {...}`.
 #[proc_macro_derive(FromIter, attributes(kv))]
 pub fn from_iter(input: TokenStream) -> TokenStream {
-    let opts = MacroOpts::parse(input).unwrap();
+    let opts = MacroOpts::parse(input);
 
     let match_and_set = get_fields(opts.data).into_iter().map(|field| {
         let ident = field
             .ident
             .as_ref()
             .expect("unnamed fields are not implemented");
-        let key = field.get_key().unwrap();
+        let key = field.get_key();
 
         quote! {
             #key => { kv_derive_impl::Consumer::consume(&mut this.#ident, value)?; }
