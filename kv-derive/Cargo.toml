@@ -1,7 +1,7 @@
 [package]
 name = "kv-derive"
 description = "Derive struct conversions from and to key-value vectors"
-version = "0.0.0"
+version = "0.1.0-alpha.13"
 edition = "2021"
 authors = ["Pavel Perestoronin <eigenein@gmail.com>"]
 readme = "../README.md"
@@ -22,4 +22,4 @@ darling = "0.14.1"
 syn = "1.0.94"
 quote = "1.0.18"
 
-kv-derive-impl = { version = "0.1.0-alpha.12", path = "../kv-derive-impl" }
+kv-derive-impl = { version = "0.1.0-alpha.13", path = "../kv-derive-impl" }
