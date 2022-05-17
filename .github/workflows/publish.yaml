@@ -20,8 +20,8 @@ jobs:
       - name: Set the versions
         run: |
           echo 'version = "${{ github.ref_name }}"'
-          sed -i -e 's/version = "0.0.0"/version = "${{ github.ref_name }}"/g' */Cargo.toml
-          sed -i -e 's/version = "*"/version = "${{ github.ref_name }}"/g' */Cargo.toml
+          sed -i -e 's/version = "0\.0\.0"/version = "${{ github.ref_name }}"/g' */Cargo.toml
+          sed -i -e 's/version = "\*"/version = "=${{ github.ref_name }}"/g' */Cargo.toml
 
       - name: Rustup
         uses: actions-rs/toolchain@v1
