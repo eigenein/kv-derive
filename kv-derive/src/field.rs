@@ -1,16 +1,18 @@
 use anyhow::{bail, Result};
 use darling::FromField;
-use syn::{Ident, Type};
+use syn::Ident;
 
 #[derive(FromField)]
 #[darling(attributes(kv), forward_attrs(allow, doc, cfg))]
 pub(crate) struct Field {
     pub ident: Option<Ident>,
-    pub ty: Type,
 
     /// Use the specified key instead of the field identifier.
     #[darling(default, rename = "rename")]
     pub custom_key: Option<String>,
+
+    #[darling(default, rename = "optional")]
+    pub is_optional: bool,
 }
 
 impl Field {
