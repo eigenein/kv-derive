@@ -1,20 +1,20 @@
+use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::Field;
 
-pub(crate) fn generate_consume_fields(fields: &[Field]) -> Vec<proc_macro2::TokenStream> {
-    fields
-        .iter()
-        .map(|field| {
-            let ident = field
-                .ident
-                .as_ref()
-                .expect("unnamed fields are not implemented");
-            let key = field.get_key();
+pub(crate) fn generate_consume_fields(fields: &[Field]) -> Vec<TokenStream> {
+    fields.iter().map(generate_consume_field).collect()
+}
 
-            quote! {
-                #key => { kv_derive_impl::Consumer::consume(&mut this.#ident, value)?; }
-            }
-        })
-        .collect()
+fn generate_consume_field(field: &Field) -> TokenStream {
+    let ident = field
+        .ident
+        .as_ref()
+        .expect("unnamed fields are not implemented");
+    let key = field.get_key();
+
+    quote! {
+        #key => { kv_derive_impl::Consumer::consume(&mut this.#ident, value)?; }
+    }
 }
