@@ -21,7 +21,7 @@ pub fn into_vec(input: TokenStream) -> TokenStream {
 
     let tokens = quote! {
         impl #generics ::kv_derive_impl::IntoVec for #ident {
-            fn into_iter(self) -> ::kv_derive_impl::into_vec::KeyValueIterator {
+            fn into_iter(self) -> Box<dyn Iterator<Item = (String, String)>> {
                 Box::new(
                     std::iter::empty()
                     #(#produce_fields)*
