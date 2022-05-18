@@ -3,17 +3,10 @@ use quote::quote;
 
 use crate::Field;
 
-pub(crate) fn generate_field_consumer(field: &Field) -> TokenStream {
+pub(crate) fn generate_match_field_consumer(field: &Field) -> TokenStream {
     let ident = field.get_ident();
     let key = field.get_key();
-
-    let consumer = if field.flatten.is_some() {
-        panic!("restoring a flattened structure is not possible");
-    } else {
-        quote! { this.#ident }
-    };
-
     quote! {
-        #key => { kv_derive_impl::consumer::Consumer::consume(&mut #consumer, value)?; }
+        #key => { kv_derive_impl::consumer::Consumer::consume(&mut this.#ident, value)?; }
     }
 }

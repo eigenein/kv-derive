@@ -169,6 +169,8 @@ let foo = Foo { bar: Bar { qux: 42 } };
 assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 ```
 
+Note that the macro doesn't check for possible duplicate keys in outer and inner structures.
+
 It's **not** possible to restore a structure with flattened fields using `#[derive(FromIter)]`.
 
 ### Prefixed
