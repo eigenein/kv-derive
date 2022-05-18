@@ -38,11 +38,9 @@ struct Foo {
     qux: String,
 }
 
-let actual = Foo::from_iter(vec![("bar", "42"), ("qux", "quuux")])?;
+let actual = Foo::from_iter(vec![("bar", "42"), ("qux", "quuux")]).unwrap();
 let expected = Foo { bar: 42, qux: "quuux".into() };
 assert_eq!(actual, expected);
-
-::kv_derive::Result::Ok(())
 ```
 
 `FromIter` requires that the deriving struct implements [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html).
@@ -61,11 +59,9 @@ struct Foo {
 }
 
 let mapping = HashMap::from([("bar", "42"), ("qux", "quuux")]);
-let actual = Foo::from_mapping(&mapping)?;
+let actual = Foo::from_mapping(&mapping).unwrap();
 let expected = Foo { bar: 42, qux: "quuux".into() };
 assert_eq!(actual, expected);
-
-::kv_derive::Result::Ok(())
 ```
 
 Missing key causes the error:
@@ -116,11 +112,9 @@ struct Foo {
     qux: Option<i32>,
 }
 
-let actual = Foo::from_iter(vec![("bar", "42")])?;
+let actual = Foo::from_iter(vec![("bar", "42")]).unwrap();
 let expected = Foo { bar: Some(42), qux: None };
 assert_eq!(actual, expected);
-
-# ::kv_derive::Result::Ok(())
 ```
 
 ### Collection fields
@@ -152,11 +146,9 @@ struct Foo {
     bar: Vec<i32>,
 }
 
-let actual = Foo::from_iter(vec![("bar", "42".into()), ("bar", "100500".into())])?;
+let actual = Foo::from_iter(vec![("bar", "42".into()), ("bar", "100500".into())]).unwrap();
 let expected = Foo { bar: vec![42, 100500] };
 assert_eq!(actual, expected);
-
-# ::kv_derive::Result::Ok(())
 ```
 
 ### Renaming fields with `kv(rename = …)`
