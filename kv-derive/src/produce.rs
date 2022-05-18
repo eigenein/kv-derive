@@ -3,11 +3,11 @@ use quote::quote;
 
 use crate::field::Field;
 
-pub(crate) fn generate_produce_fields(fields: &[Field]) -> Vec<TokenStream> {
-    fields.iter().map(generate_produce_field).collect()
+pub(crate) fn generate_field_producers(fields: &[Field]) -> Vec<TokenStream> {
+    fields.iter().map(generate_field_producer).collect()
 }
 
-fn generate_produce_field(field: &Field) -> TokenStream {
+fn generate_field_producer(field: &Field) -> TokenStream {
     let ident = field.get_ident();
     let key = field.get_key();
 
