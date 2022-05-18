@@ -9,20 +9,20 @@ Derive `struct` conversions from and to key-value vectors using [`ToString`](htt
 
 ## Examples
 
-### `#[derive(ToVec)]`
+### `#[derive(IntoVec)]`
 
 ```rust
-use kv_derive::ToVec;
-use kv_derive_impl::ToVec;
+use kv_derive::IntoVec;
+use kv_derive_impl::IntoVec;
 
-#[derive(ToVec)]
+#[derive(IntoVec)]
 struct Foo {
     bar: i32,
     qux: String,
 }
 
 let foo = Foo { bar: 42, qux: "qux".into() };
-assert_eq!(foo.to_vec(), vec![
+assert_eq!(foo.into_vec(), vec![
     ("bar".into(), "42".into()),
     ("qux".into(), "qux".into()),
 ]);
@@ -55,17 +55,17 @@ assert_eq!(actual, expected);
 `Option<T>` fields are skipped while converting to a vector:
 
 ```rust
-use kv_derive::ToVec;
-use kv_derive_impl::ToVec;
+use kv_derive::IntoVec;
+use kv_derive_impl::IntoVec;
 
-#[derive(ToVec)]
+#[derive(IntoVec)]
 struct Foo {
     bar: Option<i32>,
     qux: Option<i32>,
 }
 
 let foo = Foo { bar: Some(42), qux: None };
-assert_eq!(foo.to_vec(), vec![("bar".into(), "42".into())]);
+assert_eq!(foo.into_vec(), vec![("bar".into(), "42".into())]);
 ```
 
 and left out with their defaults while converting back to the struct:
@@ -91,16 +91,16 @@ assert_eq!(actual, expected);
 Collection field emits multiple entries with the same key:
 
 ```rust
-use kv_derive::ToVec;
-use kv_derive_impl::ToVec;
+use kv_derive::IntoVec;
+use kv_derive_impl::IntoVec;
 
-#[derive(ToVec)]
+#[derive(IntoVec)]
 struct Foo {
     bar: Vec<i32>,
 }
 
 let foo = Foo { bar: vec![42, 100500] };
-assert_eq!(foo.to_vec(), vec![
+assert_eq!(foo.into_vec(), vec![
     ("bar".into(), "42".into()),
     ("bar".into(), "100500".into()),
 ]);
@@ -128,36 +128,36 @@ assert_eq!(actual, expected);
 Uses the specified key instead of the identifier:
 
 ```rust
-use kv_derive::ToVec;
-use kv_derive_impl::ToVec;
+use kv_derive::IntoVec;
+use kv_derive_impl::IntoVec;
 
-#[derive(ToVec)]
+#[derive(IntoVec)]
 struct Foo {
     #[kv(rename = "qux")]
     bar: i32,
 }
 
 let foo = Foo { bar: 42 };
-assert_eq!(foo.to_vec(), vec![("qux".into(), "42".into())]);
+assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 ```
 
 ## Flattening
 
 ```rust
-use kv_derive::ToVec;
-use kv_derive_impl::ToVec;
+use kv_derive::IntoVec;
+use kv_derive_impl::IntoVec;
 
-#[derive(ToVec)]
+#[derive(IntoVec)]
 struct Bar {
     qux: i32,
 }
 
-#[derive(ToVec)]
+#[derive(IntoVec)]
 struct Foo {
     #[kv(flatten())]
     bar: Bar,
 }
 
 let foo = Foo { bar: Bar { qux: 42 } };
-assert_eq!(foo.to_vec(), vec![("qux".into(), "42".into())]);
+assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 ```

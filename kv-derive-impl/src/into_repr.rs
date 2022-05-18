@@ -1,20 +1,25 @@
 /// Converts a value to its string representation.
 /// The opposite of [`crate::from_repr::FromRepr`].
-pub trait ToRepr {
-    fn to_repr(&self) -> String;
+pub trait IntoRepr {
+    fn into_repr(self) -> String;
+}
+
+impl IntoRepr for String {
+    fn into_repr(self) -> String {
+        self
+    }
 }
 
 macro_rules! impl_repr {
     ($type:ty) => {
-        impl ToRepr for $type {
-            fn to_repr(&self) -> String {
+        impl IntoRepr for $type {
+            fn into_repr(self) -> String {
                 self.to_string()
             }
         }
     };
 }
 
-impl_repr!(String);
 impl_repr!(&str);
 
 impl_repr!(i8);

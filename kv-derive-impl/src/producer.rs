@@ -1,41 +1,44 @@
-use crate::{ToRepr, ToVec};
+use std::iter;
+
+use crate::into_vec::KeyValueIterator;
+use crate::{IntoRepr, IntoVec};
 
 /// Responsible for producing the vector entries based on its value.
 ///
 /// May produce none, one or many entries, depending on a specific type.
 pub trait Producer {
-    fn produce(&self, output: &mut Vec<(String, String)>, key: &'static str);
+    fn produce(self, key: &'static str) -> KeyValueIterator;
 }
 
-impl<T: ToRepr> Producer for T {
-    fn produce(&self, output: &mut Vec<(String, String)>, key: &'static str) {
-        output.push((key.to_string(), self.to_repr()));
+impl<T: IntoRepr> Producer for T {
+    fn produce(self, key: &'static str) -> KeyValueIterator {
+        Box::new(iter::once((key.to_string(), self.into_repr())))
     }
 }
 
-impl<T: ToRepr> Producer for Option<T> {
-    fn produce(&self, output: &mut Vec<(String, String)>, key: &'static str) {
+impl<T: IntoRepr> Producer for Option<T> {
+    fn produce(self, key: &'static str) -> KeyValueIterator {
         if let Some(value) = self {
-            output.push((key.to_string(), value.to_repr()));
+            Box::new(iter::once((key.to_string(), value.into_repr())))
+        } else {
+            Box::new(iter::empty())
         }
     }
 }
 
-impl<T: ToRepr> Producer for Vec<T> {
-    fn produce(&self, output: &mut Vec<(String, String)>, key: &'static str) {
-        for item in self {
-            output.push((key.to_string(), item.to_repr()));
-        }
+impl<T: IntoRepr + 'static> Producer for Vec<T> {
+    fn produce(self, key: &'static str) -> KeyValueIterator {
+        Box::new(
+            self.into_iter()
+                .map(|item| (key.to_string(), item.into_repr())),
+        )
     }
 }
 
 pub struct FlatteningProducer<T>(pub T);
 
-impl<T: ToVec> Producer for FlatteningProducer<&T> {
-    fn produce(&self, output: &mut Vec<(String, String)>, _key: &'static str) {
-        self.0
-            .to_vec()
-            .into_iter()
-            .for_each(|entry| output.push(entry));
+impl<T: IntoVec> Producer for FlatteningProducer<T> {
+    fn produce(self, _key: &'static str) -> KeyValueIterator {
+        self.0.into_iter()
     }
 }

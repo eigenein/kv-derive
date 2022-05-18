@@ -1,10 +1,10 @@
-use kv_derive::ToVec;
-use kv_derive_impl::ToVec;
+use kv_derive::IntoVec;
+use kv_derive_impl::IntoVec;
 
 #[test]
 fn empty_ok() {
-    #[derive(ToVec)]
+    #[derive(IntoVec)]
     struct Empty;
 
-    assert_eq!(Empty.to_vec(), Vec::new());
+    assert_eq!(Empty.into_vec(), Vec::new());
 }

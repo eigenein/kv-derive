@@ -11,13 +11,13 @@ fn generate_produce_field(field: &Field) -> TokenStream {
     let ident = field.get_ident();
     let key = field.get_key();
 
-    let this = if let Some(flatten) = &field.flatten {
-        quote! { ::kv_derive_impl::producer::FlatteningProducer(&self.#ident) }
+    let this = if let Some(_flatten) = &field.flatten {
+        quote! { ::kv_derive_impl::producer::FlatteningProducer(self.#ident) }
     } else {
         quote! { self.#ident }
     };
 
     quote! {
-        ::kv_derive_impl::producer::Producer::produce(&#this, &mut pairs, #key);
+        .chain(::kv_derive_impl::producer::Producer::produce(#this, #key))
     }
 }

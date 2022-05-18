@@ -4,7 +4,7 @@ use crate::error::Error;
 use crate::result::Result;
 
 /// Converts a string representation back to the typed value.
-/// The opposite of [`crate::to_repr::ToRepr`].
+/// The opposite of [`crate::to_repr::IntoRepr`].
 pub trait FromRepr: Sized {
     fn from_repr(string: &str) -> Result<Self>;
 }

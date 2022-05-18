@@ -11,27 +11,28 @@ mod field;
 mod opts;
 mod produce;
 
-/// Generates `fn to_vec(&self) -> Vec<&'static str, String> {...}`.
-#[proc_macro_derive(ToVec, attributes(kv))]
-pub fn to_vec(input: TokenStream) -> TokenStream {
+/// Generates [`kv_derive_impl::IntoVec`].
+#[proc_macro_derive(IntoVec, attributes(kv))]
+pub fn into_vec(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
     let ident = opts.ident;
     let generics = opts.generics;
     let produce_fields = generate_produce_fields(&get_fields(opts.data));
 
     let tokens = quote! {
-        impl #generics ::kv_derive_impl::ToVec for #ident {
-            fn to_vec(&self) -> std::vec::Vec<(String, String)> {
-                let mut pairs = std::vec::Vec::new();
-                #(#produce_fields)*
-                pairs
+        impl #generics ::kv_derive_impl::IntoVec for #ident {
+            fn into_iter(self) -> ::kv_derive_impl::into_vec::KeyValueIterator {
+                Box::new(
+                    std::iter::empty()
+                    #(#produce_fields)*
+                )
             }
         }
     };
     tokens.into()
 }
 
-/// Generates `fn from_iter(iter: IntoIterator<...>) -> anyhow::Result<Self> {...}`.
+/// Generates [`kv_derive_impl::FromIter`].
 #[proc_macro_derive(FromIter, attributes(kv))]
 pub fn from_iter(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
