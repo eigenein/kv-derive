@@ -148,6 +148,8 @@ assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 
 ### Simple
 
+It is possible to «flatten» an inner structure into the resulting `Vec<_>`:
+
 ```rust
 use kv_derive::IntoVec;
 use kv_derive_impl::IntoVec;
@@ -167,7 +169,11 @@ let foo = Foo { bar: Bar { qux: 42 } };
 assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 ```
 
+It's **not** possible to restore a structure with flattened fields using `#[derive(FromIter)]`.
+
 ### Prefixed
+
+It's also possible to prefix all the inner fields with a same prefix:
 
 ```rust
 use kv_derive::IntoVec;
