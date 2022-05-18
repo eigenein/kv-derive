@@ -1,6 +1,7 @@
 use std::iter;
 
-use crate::{IntoRepr, IntoVec};
+use crate::into_repr::IntoRepr;
+use crate::into_vec::IntoVec;
 
 /// Responsible for producing the vector entries based on its value.
 ///

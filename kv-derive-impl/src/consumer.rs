@@ -1,5 +1,5 @@
+use crate::from_repr::FromRepr;
 use crate::result::Result;
-use crate::FromRepr;
 
 /// Responsible for consuming the string value and modifying itself accordingly.
 ///

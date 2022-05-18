@@ -12,8 +12,7 @@ Derive `struct` conversions from and to key-value vectors using [`ToString`](htt
 ### `#[derive(IntoVec)]`
 
 ```rust
-use kv_derive::IntoVec;
-use kv_derive_impl::IntoVec;
+use kv_derive::prelude::*;
 
 #[derive(IntoVec)]
 struct Foo {
@@ -31,8 +30,7 @@ assert_eq!(foo.into_vec(), vec![
 ### `#[derive(FromIter)]`
 
 ```rust
-use kv_derive::FromIter;
-use kv_derive_impl::FromIter;
+use kv_derive::prelude::*;
 
 #[derive(FromIter, Default, Debug, PartialEq)]
 struct Foo {
@@ -44,7 +42,7 @@ let actual = Foo::from_iter(vec![("bar", "42"), ("qux", "quuux")])?;
 let expected = Foo { bar: 42, qux: "quuux".into() };
 assert_eq!(actual, expected);
 
-# ::kv_derive_impl::Result::Ok(())
+::kv_derive::Result::Ok(())
 ```
 
 `FromIter` requires that the deriving struct implements [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html).
@@ -54,9 +52,7 @@ assert_eq!(actual, expected);
 ```rust
 use std::collections::HashMap;
 
-use kv_derive::FromMapping;
-use kv_derive_impl::FromMapping;
-use kv_derive_impl::from_mapping::Mapping;
+use kv_derive::prelude::*;
 
 #[derive(FromMapping, Debug, PartialEq)]
 struct Foo {
@@ -69,7 +65,7 @@ let actual = Foo::from_mapping(&mapping)?;
 let expected = Foo { bar: 42, qux: "quuux".into() };
 assert_eq!(actual, expected);
 
-# ::kv_derive_impl::Result::Ok(())
+::kv_derive::Result::Ok(())
 ```
 
 Missing key causes the error:
@@ -77,9 +73,7 @@ Missing key causes the error:
 ```rust
 use std::collections::HashMap;
 
-use kv_derive::FromMapping;
-use kv_derive_impl::{FromMapping, Error};
-use kv_derive_impl::from_mapping::Mapping;
+use kv_derive::prelude::*;
 
 #[derive(FromMapping, Debug, PartialEq)]
 struct Foo {
@@ -89,7 +83,7 @@ struct Foo {
 
 let mapping = HashMap::from([("bar", "42")]);
 let actual = Foo::from_mapping(&mapping);
-assert_eq!(actual, Err(Error::MissingKey("qux")));
+assert_eq!(actual, Err(kv_derive::Error::MissingKey("qux")));
 ```
 
 ## Customizing fields
@@ -99,8 +93,7 @@ assert_eq!(actual, Err(Error::MissingKey("qux")));
 `Option<T>` fields are skipped while converting to a vector:
 
 ```rust
-use kv_derive::IntoVec;
-use kv_derive_impl::IntoVec;
+use kv_derive::prelude::*;
 
 #[derive(IntoVec)]
 struct Foo {
@@ -115,8 +108,7 @@ assert_eq!(foo.into_vec(), vec![("bar".into(), "42".into())]);
 and left out with their defaults while converting back to the struct:
 
 ```rust
-use kv_derive::FromIter;
-use kv_derive_impl::FromIter;
+use kv_derive::prelude::*;
 
 #[derive(FromIter, Default, Debug, PartialEq)]
 struct Foo {
@@ -128,7 +120,7 @@ let actual = Foo::from_iter(vec![("bar", "42")])?;
 let expected = Foo { bar: Some(42), qux: None };
 assert_eq!(actual, expected);
 
-# ::kv_derive_impl::Result::Ok(())
+# ::kv_derive::Result::Ok(())
 ```
 
 ### Collection fields
@@ -136,8 +128,7 @@ assert_eq!(actual, expected);
 Collection field emits multiple entries with the same key:
 
 ```rust
-use kv_derive::IntoVec;
-use kv_derive_impl::IntoVec;
+use kv_derive::prelude::*;
 
 #[derive(IntoVec)]
 struct Foo {
@@ -154,8 +145,7 @@ assert_eq!(foo.into_vec(), vec![
 which can be recollected back:
 
 ```rust
-use kv_derive::FromIter;
-use kv_derive_impl::FromIter;
+use kv_derive::prelude::*;
 
 #[derive(FromIter, Default, Debug, PartialEq)]
 struct Foo {
@@ -166,7 +156,7 @@ let actual = Foo::from_iter(vec![("bar", "42".into()), ("bar", "100500".into())]
 let expected = Foo { bar: vec![42, 100500] };
 assert_eq!(actual, expected);
 
-# ::kv_derive_impl::Result::Ok(())
+# ::kv_derive::Result::Ok(())
 ```
 
 ### Renaming fields with `kv(rename = …)`
@@ -174,8 +164,7 @@ assert_eq!(actual, expected);
 Uses the specified key instead of the identifier:
 
 ```rust
-use kv_derive::IntoVec;
-use kv_derive_impl::IntoVec;
+use kv_derive::prelude::*;
 
 #[derive(IntoVec)]
 struct Foo {
@@ -194,8 +183,7 @@ assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 It is possible to «flatten» an inner structure into the resulting `Vec<_>`:
 
 ```rust
-use kv_derive::IntoVec;
-use kv_derive_impl::IntoVec;
+use kv_derive::prelude::*;
 
 #[derive(IntoVec)]
 struct Bar {
@@ -221,8 +209,7 @@ It's **not** possible to restore a structure with flattened fields using `#[deri
 It's also possible to prefix all the inner fields with a same prefix:
 
 ```rust
-use kv_derive::IntoVec;
-use kv_derive_impl::IntoVec;
+use kv_derive::prelude::*;
 
 #[derive(IntoVec)]
 struct Bar {

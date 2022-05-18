@@ -1,9 +1,10 @@
 //! Cases which aren't covered in the README.
-use kv_derive::FromIter;
-use kv_derive_impl::FromIter;
+
+use kv_derive::prelude::*;
+use kv_derive_impl::error::Error;
 
 #[test]
-fn empty_ok() -> Result<(), kv_derive_impl::error::Error> {
+fn empty_ok() -> Result<(), Error> {
     #[derive(Debug, Default, PartialEq, FromIter)]
     struct Empty;
 

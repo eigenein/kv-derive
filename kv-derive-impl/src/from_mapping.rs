@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 
-use crate::Result;
+use crate::result::Result;
 
 pub trait FromMapping: Sized {
     fn from_mapping(mapping: impl Mapping) -> Result<Self>;
