@@ -12,12 +12,21 @@ pub(crate) struct Field {
 
     #[darling(default)]
     pub flatten: Option<FlattenOpts>,
+
+    #[darling(default)]
+    pub default: Option<DefaultOpts>,
 }
 
 #[derive(Default, FromMeta)]
 #[darling(default)]
 pub(crate) struct FlattenOpts {
     pub prefix: Option<String>,
+}
+
+#[derive(Default, FromMeta)]
+#[darling(default)]
+pub(crate) struct DefaultOpts {
+    pub value: Option<String>,
 }
 
 impl Field {

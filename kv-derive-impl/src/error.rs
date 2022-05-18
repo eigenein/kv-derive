@@ -1,7 +1,10 @@
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum Error {
+    #[error("missing key: `{0}`")]
+    MissingKey(&'static str),
+
     #[error("could not parse an integer")]
     ParseIntError(#[from] std::num::ParseIntError),
 

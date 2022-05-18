@@ -49,6 +49,49 @@ assert_eq!(actual, expected);
 
 `FromIter` requires that the deriving struct implements [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html).
 
+### `#[derive(FromMapping)]`
+
+```rust
+use std::collections::HashMap;
+
+use kv_derive::FromMapping;
+use kv_derive_impl::FromMapping;
+use kv_derive_impl::from_mapping::Mapping;
+
+#[derive(FromMapping, Debug, PartialEq)]
+struct Foo {
+    bar: i32,
+    qux: String,
+}
+
+let mapping = HashMap::from([("bar", "42"), ("qux", "quuux")]);
+let actual = Foo::from_mapping(&mapping)?;
+let expected = Foo { bar: 42, qux: "quuux".into() };
+assert_eq!(actual, expected);
+
+# ::kv_derive_impl::Result::Ok(())
+```
+
+Missing key causes the error:
+
+```rust
+use std::collections::HashMap;
+
+use kv_derive::FromMapping;
+use kv_derive_impl::{FromMapping, Error};
+use kv_derive_impl::from_mapping::Mapping;
+
+#[derive(FromMapping, Debug, PartialEq)]
+struct Foo {
+    bar: i32,
+    qux: String,
+}
+
+let mapping = HashMap::from([("bar", "42")]);
+let actual = Foo::from_mapping(&mapping);
+assert_eq!(actual, Err(Error::MissingKey("qux")));
+```
+
 ## Customizing fields
 
 ### Optional fields

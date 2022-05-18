@@ -1,15 +1,11 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::consume::generate_match_field_consumer;
 use crate::field::Field;
 use crate::opts::{get_fields, MacroOpts};
-use crate::produce::generate_field_producers;
 
-mod consume;
 mod field;
 mod opts;
-mod produce;
 
 /// Derives [`kv_derive_impl::IntoVec`].
 #[proc_macro_derive(IntoVec, attributes(kv))]
@@ -17,7 +13,9 @@ pub fn into_vec(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
     let ident = opts.ident;
     let generics = opts.generics;
-    let field_producers = generate_field_producers(&get_fields(opts.data));
+    let field_producers = get_fields(opts.data)
+        .into_iter()
+        .map(generate_field_producer);
 
     let tokens = quote! {
         impl #generics ::kv_derive_impl::IntoVec for #ident #generics {
@@ -32,22 +30,40 @@ pub fn into_vec(input: TokenStream) -> TokenStream {
     tokens.into()
 }
 
+fn generate_field_producer(field: Field) -> proc_macro2::TokenStream {
+    let ident = field.get_ident();
+    let key = field.get_key();
+
+    let producer = if let Some(flatten) = &field.flatten {
+        if let Some(prefix) = &flatten.prefix {
+            quote! { ::kv_derive_impl::producer::PrefixedFlatteningProducer(self.#ident, #prefix) }
+        } else {
+            quote! { ::kv_derive_impl::producer::FlatteningProducer(self.#ident) }
+        }
+    } else {
+        quote! { self.#ident }
+    };
+
+    quote! {
+        .chain(::kv_derive_impl::producer::Producer::produce(#producer, #key))
+    }
+}
+
 /// Derives [`kv_derive_impl::FromIter`].
 #[proc_macro_derive(FromIter, attributes(kv))]
 pub fn from_iter(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
     let ident = opts.ident;
     let generics = opts.generics;
-    let field_consumers: Vec<_> = get_fields(opts.data)
-        .iter()
+    let field_consumers = get_fields(opts.data)
+        .into_iter()
         .inspect(|field| {
             assert!(
                 field.flatten.is_none(),
                 "restoring a flattened structure from an iterable is not possible",
             )
         })
-        .map(generate_match_field_consumer)
-        .collect();
+        .map(generate_match_field_consumer);
 
     let tokens = quote! {
         impl #generics ::kv_derive_impl::FromIter for #ident #generics {
@@ -69,20 +85,49 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
     tokens.into()
 }
 
+fn generate_match_field_consumer(field: Field) -> proc_macro2::TokenStream {
+    let ident = field.get_ident();
+    let key = field.get_key();
+    quote! {
+        #key => { kv_derive_impl::consumer::Consumer::consume(&mut this.#ident, value)?; }
+    }
+}
+
 /// Derives [`kv_derive_impl::FromMapping`].
 #[proc_macro_derive(FromMapping, attributes(kv))]
 pub fn from_mapping(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
     let ident = opts.ident;
     let generics = opts.generics;
+    let mapped_fields = get_fields(opts.data).into_iter().map(generate_mapped_field);
 
     let tokens = quote! {
         impl #generics ::kv_derive_impl::FromMapping for #ident #generics {
-            fn from_mapping(self) -> ::kv_derive_impl::Result<Self> {
+            fn from_mapping(mapping: impl Mapping) -> ::kv_derive_impl::Result<Self> {
+                Ok(Self {
+                    #(#mapped_fields,)*
+                })
             }
         }
     };
     tokens.into()
+}
+
+fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
+    let ident = field.get_ident();
+    let key = field.get_key();
+    let value = if let Some(default) = &field.default {
+        if let Some(_value) = &default.value {
+            quote! { todo!() }
+        } else {
+            quote! { todo!() }
+        }
+    } else {
+        quote! { mapping.get(#key).ok_or_else(|| ::kv_derive_impl::Error::MissingKey(#key))? }
+    };
+    quote! {
+        #ident: ::kv_derive_impl::FromRepr::from_repr(#value)?
+    }
 }
 
 #[cfg(doctest)]
