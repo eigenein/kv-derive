@@ -32,6 +32,7 @@ assert_eq!(foo.into_vec(), vec![
 
 ```rust
 use kv_derive::FromIter;
+use kv_derive_impl::FromIter;
 
 #[derive(FromIter, Default, Debug, PartialEq)]
 struct Foo {
@@ -72,6 +73,7 @@ and left out with their defaults while converting back to the struct:
 
 ```rust
 use kv_derive::FromIter;
+use kv_derive_impl::FromIter;
 
 #[derive(FromIter, Default, Debug, PartialEq)]
 struct Foo {
@@ -110,6 +112,7 @@ which can be recollected back:
 
 ```rust
 use kv_derive::FromIter;
+use kv_derive_impl::FromIter;
 
 #[derive(FromIter, Default, Debug, PartialEq)]
 struct Foo {

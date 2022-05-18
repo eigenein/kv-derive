@@ -41,8 +41,8 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
     let consume_fields = generate_consume_fields(&get_fields(opts.data));
 
     let tokens = quote! {
-        impl #generics #ident {
-            pub fn from_iter<'a>(iter: impl std::iter::IntoIterator<Item = (&'a str, &'a str)>) -> ::kv_derive_impl::Result<Self>
+        impl ::kv_derive_impl::FromIter for #generics #ident {
+            fn from_iter<'a>(iter: impl std::iter::IntoIterator<Item = (&'a str, &'a str)>) -> ::kv_derive_impl::Result<Self>
             where
                 Self: std::default::Default,
             {

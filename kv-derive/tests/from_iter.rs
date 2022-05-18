@@ -1,5 +1,6 @@
 //! Cases which aren't covered in the README.
 use kv_derive::FromIter;
+use kv_derive_impl::FromIter;
 
 #[test]
 fn empty_ok() -> Result<(), kv_derive_impl::error::Error> {
