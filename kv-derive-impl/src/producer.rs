@@ -42,15 +42,17 @@ impl<T: IntoRepr + 'static> Producer for Option<T> {
 
 /// Collection producer.
 ///
-/// Produces as many key-value pairs as the number of collection elements.
+/// Produces as many key-value pairs as the number of the collection elements.
 impl<T: IntoRepr + 'static> Producer for Vec<T> {
-    type Iter = Box<dyn Iterator<Item = (String, String)>>;
+    type Iter = iter::Map<
+        iter::Zip<iter::Repeat<&'static str>, std::vec::IntoIter<T>>,
+        fn((&'static str, T)) -> (String, String),
+    >;
 
     fn produce(self, key: &'static str) -> Self::Iter {
-        Box::new(
-            self.into_iter()
-                .map(|item| (key.to_string(), item.into_repr())),
-        )
+        iter::repeat(key)
+            .zip(self.into_iter())
+            .map(|(key, item)| (key.to_string(), item.into_repr()))
     }
 }
 
