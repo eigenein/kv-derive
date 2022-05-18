@@ -3,6 +3,8 @@ pub mod prelude;
 pub use kv_derive_impl::error::Error;
 pub use kv_derive_impl::result::Result;
 
+pub use crate::prelude::*;
+
 #[cfg(doctest)]
 mod test_readme {
     macro_rules! external_doc_test {
