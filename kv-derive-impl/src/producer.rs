@@ -25,15 +25,18 @@ impl<T: IntoRepr> Producer for T {
 /// Optional scaler producer.
 ///
 /// Produces none or one key-value pair.
-impl<T: IntoRepr> Producer for Option<T> {
-    type Iter = Box<dyn Iterator<Item = (String, String)>>;
+impl<T: IntoRepr + 'static> Producer for Option<T> {
+    type Iter = iter::Map<
+        std::option::IntoIter<(T, &'static str)>,
+        fn((T, &'static str)) -> (String, String),
+    >;
 
     fn produce(self, key: &'static str) -> Self::Iter {
-        if let Some(value) = self {
-            Box::new(iter::once((key.to_string(), value.into_repr())))
-        } else {
-            Box::new(iter::empty())
-        }
+        self
+            // Move `key` in so that it need not to be captured.
+            .zip(Some(key))
+            .into_iter()
+            .map(|(value, key)| (key.to_string(), value.into_repr()))
     }
 }
 
