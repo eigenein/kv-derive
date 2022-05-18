@@ -1,3 +1,4 @@
+//! Cases which aren't covered in the README.
 use kv_derive::IntoVec;
 use kv_derive_impl::IntoVec;
 

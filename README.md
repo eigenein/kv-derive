@@ -143,6 +143,8 @@ assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 
 ## Flattening
 
+### Simple
+
 ```rust
 use kv_derive::IntoVec;
 use kv_derive_impl::IntoVec;
@@ -160,4 +162,25 @@ struct Foo {
 
 let foo = Foo { bar: Bar { qux: 42 } };
 assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
+```
+
+### Prefixed
+
+```rust
+use kv_derive::IntoVec;
+use kv_derive_impl::IntoVec;
+
+#[derive(IntoVec)]
+struct Bar {
+    qux: i32,
+}
+
+#[derive(IntoVec)]
+struct Foo {
+    #[kv(flatten(prefix = "bar::"))]
+    bar: Bar,
+}
+
+let foo = Foo { bar: Bar { qux: 42 } };
+assert_eq!(foo.into_vec(), vec![("bar::qux".into(), "42".into())]);
 ```

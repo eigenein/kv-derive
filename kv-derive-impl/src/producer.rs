@@ -11,6 +11,9 @@ pub trait Producer {
     fn produce(self, key: &'static str) -> Self::Iter;
 }
 
+/// Scalar producer.
+///
+/// Produces exactly one key-value pair.
 impl<T: IntoRepr> Producer for T {
     type Iter = iter::Once<(String, String)>;
 
@@ -19,6 +22,9 @@ impl<T: IntoRepr> Producer for T {
     }
 }
 
+/// Optional scaler producer.
+///
+/// Produces none or one key-value pair.
 impl<T: IntoRepr> Producer for Option<T> {
     type Iter = Box<dyn Iterator<Item = (String, String)>>;
 
@@ -31,6 +37,9 @@ impl<T: IntoRepr> Producer for Option<T> {
     }
 }
 
+/// Collection producer.
+///
+/// Produces as many key-value pairs as the number of collection elements.
 impl<T: IntoRepr + 'static> Producer for Vec<T> {
     type Iter = Box<dyn Iterator<Item = (String, String)>>;
 
@@ -42,6 +51,9 @@ impl<T: IntoRepr + 'static> Producer for Vec<T> {
     }
 }
 
+/// Simple flattening producer.
+///
+/// Forwards all the key-value pairs from the inner structure.
 pub struct FlatteningProducer<T>(pub T);
 
 impl<T: IntoVec> Producer for FlatteningProducer<T> {
@@ -49,5 +61,23 @@ impl<T: IntoVec> Producer for FlatteningProducer<T> {
 
     fn produce(self, _key: &'static str) -> Self::Iter {
         self.0.into_iter()
+    }
+}
+
+/// Prefixed flattening producer.
+///
+/// Forwards all the key-value pairs from the inner structure,
+/// but additionally prepends the keys with the prefix.
+pub struct PrefixedFlatteningProducer<T>(pub T, pub &'static str);
+
+impl<T: IntoVec> Producer for PrefixedFlatteningProducer<T> {
+    type Iter = Box<dyn Iterator<Item = (String, String)>>;
+
+    fn produce(self, _key: &'static str) -> Self::Iter {
+        Box::new(
+            self.0
+                .into_iter()
+                .map(move |(key, value)| (format!("{}{}", self.1, key), value)),
+        )
     }
 }
