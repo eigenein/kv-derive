@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::consume::generate_field_consumers;
+use crate::consume::generate_field_consumer;
 use crate::field::Field;
 use crate::opts::{get_fields, MacroOpts};
 use crate::produce::generate_field_producers;
@@ -17,14 +17,14 @@ pub fn into_vec(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
     let ident = opts.ident;
     let generics = opts.generics;
-    let produce_fields = generate_field_producers(&get_fields(opts.data));
+    let field_producers = generate_field_producers(&get_fields(opts.data));
 
     let tokens = quote! {
         impl #generics ::kv_derive_impl::IntoVec for #ident {
             fn into_iter(self) -> Box<dyn Iterator<Item = (String, String)>> {
                 Box::new(
                     std::iter::empty()
-                    #(#produce_fields)*
+                    #(#field_producers)*
                 )
             }
         }
@@ -38,7 +38,10 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
     let ident = opts.ident;
     let generics = opts.generics;
-    let consume_fields = generate_field_consumers(&get_fields(opts.data));
+    let field_consumers: Vec<_> = get_fields(opts.data)
+        .iter()
+        .map(generate_field_consumer)
+        .collect();
 
     let tokens = quote! {
         impl ::kv_derive_impl::FromIter for #generics #ident {
@@ -49,7 +52,7 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
                 let mut this = Self::default();
                 for (key, value) in iter.into_iter() {
                     match key {
-                        #(#consume_fields)*
+                        #(#field_consumers)*
                         _ => {}
                     }
                 }
