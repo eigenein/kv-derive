@@ -1,6 +1,6 @@
 # `kv-derive`
 
-Derive `struct` conversions from and to key-value vectors using [`ToString`](https://doc.rust-lang.org/std/string/trait.ToString.html) and [`FromStr`](https://doc.rust-lang.org/std/str/trait.FromStr.html).
+Derive `struct` conversions from and to string key-value vectors using [`ToString`](https://doc.rust-lang.org/std/string/trait.ToString.html) and [`FromStr`](https://doc.rust-lang.org/std/str/trait.FromStr.html).
 
 [![Crates.io](https://img.shields.io/crates/v/kv-derive)](https://crates.io/crates/kv-derive)
 [![Last commit](https://img.shields.io/github/last-commit/eigenein/kv-derive)](https://github.com/eigenein/kv-derive/commits/master)
@@ -85,9 +85,9 @@ assert_eq!(actual, Err(kv_derive::Error::MissingKey("qux")));
 
 ## Customizing fields
 
-### Optional fields with `Option<T>`
+### Optional fields
 
-`Option<T>` fields are skipped while converting to a vector:
+[`std::option::Option`] fields are skipped while converting to a vector:
 
 ```rust
 use kv_derive::prelude::*;
@@ -124,7 +124,7 @@ let expected = Foo { bar: Some(42), qux: None, quux: Some(42) };
 assert_eq!(actual, expected);
 ```
 
-### Defaults with `kv(default(…))`
+### Default values
 
 ```rust
 use std::collections::HashMap;
@@ -171,7 +171,7 @@ let foo = Foo { bar: 42 };
 assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 ```
 
-### `Vec<T>` fields
+### [`std::vec::Vec`] fields
 
 Vector field emits multiple entries with the same key:
 
@@ -208,7 +208,7 @@ assert_eq!(actual, expected);
 
 #### Note for `#[derive(FromMapping)]`
 
-`HashMap` or `BTreeMap` cannot contain duplicate keys. However, for consistency, singular values are properly converted to `Vec`s:
+[`std::collections::HashMap`] or [`std::collections::BTreeMap`] cannot contain duplicate keys. However, for consistency, singular values are properly converted to [`std::vec::Vec`]s:
 
 ```rust
 use std::collections::HashMap;
@@ -230,7 +230,7 @@ assert_eq!(actual, expected);
 
 ### Simple
 
-It is possible to «flatten» an inner structure into the resulting `Vec<_>`:
+It is possible to «flatten» an inner structure:
 
 ```rust
 use kv_derive::prelude::*;
@@ -252,7 +252,7 @@ assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 
 Note that the macro doesn't check for possible duplicate keys in outer and inner structures.
 
-It's **not** possible to derive `FromIter` for a structure with a flattened field. However, it works for `#[derive(FromMapping)]`:
+It's **not** possible to derive [`FromIter`](crate::prelude::FromIter) for a structure with a flattened field. However, it works for `#[derive(FromMapping)]`:
 
 ```rust
 use std::collections::HashMap;

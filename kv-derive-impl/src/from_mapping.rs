@@ -2,10 +2,12 @@ use std::collections::{BTreeMap, HashMap};
 
 use crate::result::Result;
 
+/// Constructs the structure from a mapping such as [`std::collections::HashMap`].
 pub trait FromMapping: Sized {
     fn from_mapping(mapping: impl Mapping) -> Result<Self>;
 }
 
+/// Abstracts concrete map types so that [`FromMapping`] could accept any of the implementors.
 pub trait Mapping {
     fn get(&self, key: &str) -> Option<&str>;
 }

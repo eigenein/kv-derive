@@ -2,12 +2,15 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum Error {
+    /// The input doesn't contain the specified key.
     #[error("missing key: `{0}`")]
     MissingKey(&'static str),
 
+    /// Could not parse an integer.
     #[error("could not parse an integer")]
     ParseIntError(#[from] std::num::ParseIntError),
 
+    /// Could not parse a floating-point number.
     #[error("could not parse a floating-point number")]
     ParseFloatError(#[from] std::num::ParseFloatError),
 

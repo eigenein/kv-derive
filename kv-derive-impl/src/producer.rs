@@ -3,7 +3,7 @@ use std::iter;
 use crate::into_repr::IntoRepr;
 use crate::into_vec::IntoVec;
 
-/// Responsible for producing the vector entries based on its value.
+/// Responsible for producing the key-value entries based on its value.
 ///
 /// May produce none, one or many entries, depending on a specific type.
 pub trait Producer {

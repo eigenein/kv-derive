@@ -1,3 +1,4 @@
+/// Converts the structure into an iterator or vector of key-value pairs.
 pub trait IntoVec: Sized {
     fn into_iter(self) -> Box<dyn Iterator<Item = (String, String)>>;
 

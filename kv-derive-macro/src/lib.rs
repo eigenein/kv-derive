@@ -7,7 +7,7 @@ use crate::opts::{get_fields, MacroOpts};
 mod field;
 mod opts;
 
-/// Derives [`kv_derive_impl::IntoVec`].
+/// Derives [`kv_derive_impl::into_vec::IntoVec`].
 #[proc_macro_derive(IntoVec, attributes(kv))]
 pub fn into_vec(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
@@ -49,7 +49,7 @@ fn generate_field_producer(field: Field) -> proc_macro2::TokenStream {
     }
 }
 
-/// Derives [`kv_derive_impl::FromIter`].
+/// Derives [`kv_derive_impl::from_iter::FromIter`].
 #[proc_macro_derive(FromIter, attributes(kv))]
 pub fn from_iter(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
@@ -104,7 +104,7 @@ fn generate_match_field_consumer(field: &Field) -> proc_macro2::TokenStream {
     }
 }
 
-/// Derives [`kv_derive_impl::FromMapping`].
+/// Derives [`kv_derive_impl::from_mapping::FromMapping`].
 #[proc_macro_derive(FromMapping, attributes(kv))]
 pub fn from_mapping(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
