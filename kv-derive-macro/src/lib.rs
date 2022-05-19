@@ -87,6 +87,11 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
 
 fn generate_match_field_consumer(field: Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
+    assert!(
+        field.flatten.is_none() || field.default.is_none(),
+        "don't know how to build a default flattened field `{}`",
+        ident,
+    );
     let key = field.get_key();
     quote! {
         #key => { kv_derive_impl::consumer::Consumer::consume(&mut this.#ident, value)?; }
@@ -105,7 +110,7 @@ pub fn from_mapping(input: TokenStream) -> TokenStream {
         impl #generics ::kv_derive_impl::from_mapping::FromMapping for #ident #generics {
             fn from_mapping(mapping: impl Mapping) -> ::kv_derive_impl::result::Result<Self> {
                 Ok(Self {
-                    #(#mapped_fields,)*
+                    #(#mapped_fields)*
                 })
             }
         }
@@ -115,17 +120,33 @@ pub fn from_mapping(input: TokenStream) -> TokenStream {
 
 fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
+    assert!(
+        field.flatten.is_none() || field.default.is_none(),
+        "don't know how to build a default flattened field `{}`",
+        ident,
+    );
+    let ty = &field.ty;
     let key = field.get_key();
-    let value = if let Some(default) = &field.default {
-        if let Some(_value) = &default.value {
-            quote! { todo!() }
+
+    let missing_handler = if let Some(default) = &field.default {
+        if let Some(value) = &default.value {
+            quote! { Ok(#value) }
         } else {
-            quote! { todo!() }
+            quote! { Ok(<#ty>::default()) }
         }
     } else {
-        quote! { mapping.get(#key).ok_or_else(|| ::kv_derive_impl::error::Error::MissingKey(#key))? }
+        quote! { Err(::kv_derive_impl::error::Error::MissingKey(#key)) }
     };
+
+    // TODO: support `flatten`.
+    // TODO: support `Vec<_>`.
+
     quote! {
-        #ident: ::kv_derive_impl::from_repr::FromRepr::from_repr(#value)?
+        #ident: mapping
+            .get(#key)
+            .map_or_else(
+                || #missing_handler,
+                ::kv_derive_impl::from_repr::FromRepr::from_repr,
+            )?,
     }
 }

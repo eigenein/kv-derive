@@ -1,10 +1,12 @@
 use darling::{FromField, FromMeta};
-use syn::Ident;
+use syn::{Expr, Ident, Type};
 
 #[derive(FromField)]
 #[darling(attributes(kv), forward_attrs(allow, doc, cfg))]
 pub(crate) struct Field {
     pub ident: Option<Ident>,
+
+    pub ty: Type,
 
     /// Use the specified key instead of the field identifier.
     #[darling(default, rename = "rename")]
@@ -26,7 +28,7 @@ pub(crate) struct FlattenOpts {
 #[derive(Default, FromMeta)]
 #[darling(default)]
 pub(crate) struct DefaultOpts {
-    pub value: Option<String>,
+    pub value: Option<Expr>,
 }
 
 impl Field {

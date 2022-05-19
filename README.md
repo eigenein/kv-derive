@@ -84,7 +84,7 @@ assert_eq!(actual, Err(kv_derive::Error::MissingKey("qux")));
 
 ## Customizing fields
 
-### Optional fields
+### Optional fields with `Option<T>`
 
 `Option<T>` fields are skipped while converting to a vector:
 
@@ -117,9 +117,46 @@ let expected = Foo { bar: Some(42), qux: None };
 assert_eq!(actual, expected);
 ```
 
-### Collection fields
+### Defaults with `kv(default(…))`
 
-Collection field emits multiple entries with the same key:
+```rust
+use std::collections::HashMap;
+
+use kv_derive::prelude::*;
+
+#[derive(FromMapping, Debug, PartialEq)]
+struct Foo {
+    #[kv(default())]
+    bar: i32,
+    
+    #[kv(default(value = "42"))]
+    qux: i32,
+}
+
+let foo = Foo::from_mapping(&HashMap::<String, String>::new()).unwrap();
+assert_eq!(foo, Foo { bar: 0, qux: 42 });
+```
+
+### Renaming fields with `kv(rename = …)`
+
+Uses the specified key instead of the identifier:
+
+```rust
+use kv_derive::prelude::*;
+
+#[derive(IntoVec)]
+struct Foo {
+    #[kv(rename = "qux")]
+    bar: i32,
+}
+
+let foo = Foo { bar: 42 };
+assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
+```
+
+### `Vec<T>` fields
+
+Vector field emits multiple entries with the same key:
 
 ```rust
 use kv_derive::prelude::*;
@@ -149,23 +186,6 @@ struct Foo {
 let actual = Foo::from_iter(vec![("bar", "42".into()), ("bar", "100500".into())]).unwrap();
 let expected = Foo { bar: vec![42, 100500] };
 assert_eq!(actual, expected);
-```
-
-### Renaming fields with `kv(rename = …)`
-
-Uses the specified key instead of the identifier:
-
-```rust
-use kv_derive::prelude::*;
-
-#[derive(IntoVec)]
-struct Foo {
-    #[kv(rename = "qux")]
-    bar: i32,
-}
-
-let foo = Foo { bar: 42 };
-assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 ```
 
 ## Flattening
