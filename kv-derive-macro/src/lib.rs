@@ -97,10 +97,18 @@ fn generate_match_field_consumer(field: &Field) -> proc_macro2::TokenStream {
         field.flatten.is_none(),
         "restoring a flattened field from an iterable is not implemented",
     );
+
     let ident = field.get_ident();
     let key = field.get_key();
+    let ty = &field.ty;
+
     quote! {
-        #key => { kv_derive_impl::consumer::Consumer::consume(&mut this.#ident, value)?; }
+        #key => {
+            <#ty as ::kv_derive_impl::consumer::Consumer>::consume(
+                &mut this.#ident,
+                ::kv_derive_impl::from_repr::FromRepr::from_repr(value)?,
+            );
+        }
     }
 }
 
@@ -131,6 +139,7 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
         "cannot use `flatten` and `default` at the same time for `{}`",
         ident,
     );
+
     let ty = &field.ty;
     let key = field.get_key();
 
@@ -157,7 +166,11 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
                 .get(#key)
                 .map_or_else(
                     || #missing_handler,
-                    ::kv_derive_impl::consumer::Consumer::init,
+                    |value| ::kv_derive_impl::result::Result::Ok(
+                        <#ty as ::kv_derive_impl::consumer::Consumer>::init(
+                            <#ty as ::kv_derive_impl::consumer::Consumer>::Repr::from_repr(value)?,
+                        ),
+                    ),
                 )?,
         }
     }
