@@ -32,9 +32,12 @@ assert_eq!(foo.into_vec(), vec![
 ```rust
 use kv_derive::prelude::*;
 
-#[derive(FromIter, Default, Debug, PartialEq)]
+#[derive(FromIter, Debug, PartialEq)]
 struct Foo {
+    #[kv(default())]
     bar: i32,
+    
+    #[kv(default())]
     qux: String,
 }
 
@@ -42,8 +45,6 @@ let actual = Foo::from_iter(vec![("bar", "42"), ("qux", "quuux")]).unwrap();
 let expected = Foo { bar: 42, qux: "quuux".into() };
 assert_eq!(actual, expected);
 ```
-
-`FromIter` requires that the deriving struct implements [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html).
 
 ### `#[derive(FromMapping)]`
 
@@ -106,14 +107,20 @@ and left out with their defaults while converting back to the struct:
 ```rust
 use kv_derive::prelude::*;
 
-#[derive(FromIter, Default, Debug, PartialEq)]
+#[derive(FromIter, Debug, PartialEq)]
 struct Foo {
+    #[kv(default())]
     bar: Option<i32>,
+    
+    #[kv(default())]
     qux: Option<i32>,
+    
+    #[kv(default(value = "Some(42)"))]
+    quux: Option<i32>,
 }
 
 let actual = Foo::from_iter(vec![("bar", "42")]).unwrap();
-let expected = Foo { bar: Some(42), qux: None };
+let expected = Foo { bar: Some(42), qux: None, quux: Some(42) };
 assert_eq!(actual, expected);
 ```
 
@@ -178,8 +185,9 @@ which can be recollected back:
 ```rust
 use kv_derive::prelude::*;
 
-#[derive(FromIter, Default, Debug, PartialEq)]
+#[derive(FromIter, Debug, PartialEq)]
 struct Foo {
+    #[kv(default())]
     bar: Vec<i32>,
 }
 

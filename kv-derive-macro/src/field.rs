@@ -39,7 +39,7 @@ impl Field {
         if let Some(ident) = &self.ident {
             return format!("{}", ident);
         }
-        panic!("the field is missing the identifier, did you mean to use `kv(rename = ...)`?")
+        panic!("the field is missing the identifier, did you mean to use `[kv(rename = …)]` or `[kv(flatten(…))]`?")
     }
 
     pub fn get_ident(&self) -> &Ident {

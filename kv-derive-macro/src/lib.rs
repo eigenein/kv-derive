@@ -55,8 +55,10 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
     let opts = MacroOpts::parse(input);
     let ident = opts.ident;
     let generics = opts.generics;
-    let field_consumers = get_fields(opts.data)
-        .into_iter()
+    let fields = get_fields(opts.data);
+
+    let field_consumers = fields
+        .iter()
         .inspect(|field| {
             assert!(
                 field.flatten.is_none(),
@@ -65,13 +67,26 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
         })
         .map(generate_match_field_consumer);
 
+    let field_defaults = fields.iter().map(|field| {
+        let ident = field.get_ident();
+        let ty = &field.ty;
+        let default_opts = field
+            .default
+            .as_ref()
+            .expect("`FromIter` requires `[kv(default(…))]` on each field");
+        if let Some(value) = &default_opts.value {
+            quote! { #ident: #value, }
+        } else {
+            quote! { #ident: <#ty>::default(), }
+        }
+    });
+
     let tokens = quote! {
         impl #generics ::kv_derive_impl::from_iter::FromIter for #ident #generics {
-            fn from_iter<'a>(iter: impl std::iter::IntoIterator<Item = (&'a str, &'a str)>) -> ::kv_derive_impl::result::Result<Self>
-            where
-                Self: std::default::Default,
-            {
-                let mut this = Self::default();
+            fn from_iter<'a>(iter: impl std::iter::IntoIterator<Item = (&'a str, &'a str)>) -> ::kv_derive_impl::result::Result<Self> {
+                let mut this = Self {
+                    #(#field_defaults)*
+                };
                 for (key, value) in iter.into_iter() {
                     match key {
                         #(#field_consumers)*
@@ -85,7 +100,7 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
     tokens.into()
 }
 
-fn generate_match_field_consumer(field: Field) -> proc_macro2::TokenStream {
+fn generate_match_field_consumer(field: &Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
     assert!(
         field.flatten.is_none() || field.default.is_none(),
@@ -139,7 +154,7 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
     };
 
     // TODO: support `flatten`.
-    // TODO: support `Vec<_>`.
+    // TODO: support `Vec<_>` and `Option`.
 
     quote! {
         #ident: mapping
