@@ -57,15 +57,7 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
     let generics = opts.generics;
     let fields = get_fields(opts.data);
 
-    let field_consumers = fields
-        .iter()
-        .inspect(|field| {
-            assert!(
-                field.flatten.is_none(),
-                "restoring a flattened structure from an iterable is not possible",
-            )
-        })
-        .map(generate_match_field_consumer);
+    let field_consumers = fields.iter().map(generate_match_field_consumer);
 
     let field_defaults = fields.iter().map(|field| {
         let ident = field.get_ident();
@@ -73,7 +65,7 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
         let default_opts = field
             .default
             .as_ref()
-            .expect("`FromIter` requires `[kv(default(…))]` on each field");
+            .expect("`FromIter` requires `#[kv(default(…))]` on each field");
         if let Some(value) = &default_opts.value {
             quote! { #ident: #value, }
         } else {
@@ -101,12 +93,11 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
 }
 
 fn generate_match_field_consumer(field: &Field) -> proc_macro2::TokenStream {
-    let ident = field.get_ident();
     assert!(
-        field.flatten.is_none() || field.default.is_none(),
-        "don't know how to build a default flattened field `{}`",
-        ident,
+        field.flatten.is_none(),
+        "restoring a flattened field from an iterable is not implemented",
     );
+    let ident = field.get_ident();
     let key = field.get_key();
     quote! {
         #key => { kv_derive_impl::consumer::Consumer::consume(&mut this.#ident, value)?; }
@@ -137,31 +128,37 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
     assert!(
         field.flatten.is_none() || field.default.is_none(),
-        "don't know how to build a default flattened field `{}`",
+        "cannot use `flatten` and `default` at the same time for `{}`",
         ident,
     );
     let ty = &field.ty;
     let key = field.get_key();
 
-    let missing_handler = if let Some(default) = &field.default {
-        if let Some(value) = &default.value {
-            quote! { Ok(#value) }
+    if let Some(flatten) = &field.flatten {
+        let mapping = if let Some(prefix) = &flatten.prefix {
+            quote! { ::kv_derive_impl::from_mapping::PrefixedMapping(mapping, #prefix) }
         } else {
-            quote! { Ok(<#ty>::default()) }
-        }
+            quote! { mapping }
+        };
+        quote! { #ident: <#ty as ::kv_derive_impl::from_mapping::FromMapping>::from_mapping(#mapping)?, }
     } else {
-        quote! { Err(::kv_derive_impl::error::Error::MissingKey(#key)) }
-    };
+        let missing_handler = if let Some(default) = &field.default {
+            if let Some(value) = &default.value {
+                quote! { Ok(#value) }
+            } else {
+                quote! { Ok(<#ty>::default()) }
+            }
+        } else {
+            quote! { Err(::kv_derive_impl::error::Error::MissingKey(#key)) }
+        };
 
-    // TODO: support `flatten`.
-    // TODO: support `Vec<_>` and `Option`.
-
-    quote! {
-        #ident: mapping
-            .get(#key)
-            .map_or_else(
-                || #missing_handler,
-                ::kv_derive_impl::consumer::Consumer::init,
-            )?,
+        quote! {
+            #ident: mapping
+                .get(#key)
+                .map_or_else(
+                    || #missing_handler,
+                    ::kv_derive_impl::consumer::Consumer::init,
+                )?,
+        }
     }
 }

@@ -252,7 +252,29 @@ assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 
 Note that the macro doesn't check for possible duplicate keys in outer and inner structures.
 
-It's **not** possible to restore a structure with flattened fields using `#[derive(FromIter)]`.
+It's **not** possible to derive `FromIter` for a structure with a flattened field. However, it works for `#[derive(FromMapping)]`:
+
+```rust
+use std::collections::HashMap;
+
+use kv_derive::prelude::*;
+
+#[derive(FromMapping, Debug, PartialEq)]
+struct Inner {
+    bar: i32,
+}
+
+#[derive(FromMapping, Debug, PartialEq)]
+struct Outer {
+    #[kv(flatten())]
+    inner: Inner,
+}
+
+let map = HashMap::from([("bar", "42")]);
+let actual = Outer::from_mapping(&map).unwrap();
+let expected = Outer { inner: Inner { bar: 42 } };
+assert_eq!(actual, expected);
+```
 
 ### Prefixed
 
@@ -274,4 +296,28 @@ struct Foo {
 
 let foo = Foo { bar: Bar { qux: 42 } };
 assert_eq!(foo.into_vec(), vec![("bar::qux".into(), "42".into())]);
+```
+
+And back:
+
+```rust
+use std::collections::HashMap;
+
+use kv_derive::prelude::*;
+
+#[derive(FromMapping, Debug, PartialEq)]
+struct Inner {
+    bar: i32,
+}
+
+#[derive(FromMapping, Debug, PartialEq)]
+struct Outer {
+    #[kv(flatten(prefix = "inner::"))]
+    inner: Inner,
+}
+
+let map = HashMap::from([("inner::bar", "42")]);
+let actual = Outer::from_mapping(&map).unwrap();
+let expected = Outer { inner: Inner { bar: 42 } };
+assert_eq!(actual, expected);
 ```

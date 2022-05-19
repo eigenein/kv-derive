@@ -10,6 +10,15 @@ pub trait Mapping {
     fn get(&self, key: &str) -> Option<&str>;
 }
 
+/// Wraps another mapping so that the values are got from the prefixed keys.
+pub struct PrefixedMapping<T>(pub T, pub &'static str);
+
+impl<T: Mapping> Mapping for PrefixedMapping<T> {
+    fn get(&self, key: &str) -> Option<&str> {
+        self.0.get(&format!("{}{}", self.1, key))
+    }
+}
+
 impl Mapping for HashMap<String, String> {
     fn get(&self, key: &str) -> Option<&str> {
         HashMap::<String, String>::get(self, key).map(String::as_str)
