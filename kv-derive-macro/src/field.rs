@@ -14,12 +14,15 @@ pub(crate) struct Field {
     #[darling(default, rename = "rename")]
     pub custom_key: Option<String>,
 
+    /// Flattening options.
     #[darling(default)]
     pub flatten: Option<FlattenOpts>,
 
+    /// Default value.
     #[darling(default)]
     pub default: Option<DefaultOpts>,
 
+    /// Intermediate type that should be used to represent an actual value.
     #[darling(default)]
     pub via: Option<Type>,
 }
@@ -27,6 +30,7 @@ pub(crate) struct Field {
 #[derive(Default, FromMeta)]
 #[darling(default)]
 pub(crate) struct FlattenOpts {
+    /// Prefix all the flattened fields with the specified prefix.
     pub prefix: Option<String>,
 }
 
