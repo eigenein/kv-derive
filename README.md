@@ -171,6 +171,64 @@ let foo = Foo { bar: 42 };
 assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 ```
 
+### Specifying an intermediate type
+
+You can specify an intermediate type, which will be used to derive textual representation – instead of the field type itself. The `via` type must implement [`std::convert::From`] for [`crate::IntoVec`]:
+
+```rust
+use std::net::Ipv4Addr;
+
+use kv_derive::prelude::*;
+
+#[derive(IntoVec)]
+struct Foo {
+    #[kv(via = "u32")]
+    bar: Ipv4Addr,
+}
+
+let foo = Foo { bar: Ipv4Addr::LOCALHOST };
+assert_eq!(foo.into_vec(), vec![("bar".into(), "2130706433".into())]);
+```
+
+And [`std::convert::Into`] for [`crate::FromIter`]:
+
+```rust
+use std::collections::HashMap;
+use std::net::Ipv4Addr;
+
+use kv_derive::prelude::*;
+
+#[derive(FromIter, Debug, PartialEq)]
+struct Foo {
+    #[kv(via = "u32", default())]
+    bar: Option<Ipv4Addr>,
+}
+
+let actual = Foo::from_iter(vec![("bar", "2130706433")]).unwrap();
+let expected = Foo { bar: Some(Ipv4Addr::LOCALHOST) };
+assert_eq!(actual, expected);
+```
+
+Or for [`crate::FromMapping`]:
+
+```rust
+use std::collections::HashMap;
+use std::net::Ipv4Addr;
+
+use kv_derive::prelude::*;
+
+#[derive(FromMapping, Debug, PartialEq)]
+struct Foo {
+    #[kv(via = "u32")]
+    bar: Ipv4Addr,
+}
+
+let mapping = HashMap::from([("bar", "2130706433")]);
+let actual = Foo::from_mapping(&mapping).unwrap();
+let expected = Foo { bar: Ipv4Addr::LOCALHOST };
+assert_eq!(actual, expected);
+```
+
 ### [`std::vec::Vec`] fields
 
 Vector field emits multiple entries with the same key:

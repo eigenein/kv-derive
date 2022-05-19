@@ -33,15 +33,17 @@ pub fn into_vec(input: TokenStream) -> TokenStream {
 fn generate_field_producer(field: Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
     let key = field.get_key();
+    let as_type = field.via.as_ref().unwrap_or(&field.ty);
+    let value = quote! { Into::<#as_type>::into(self.#ident) };
 
     let producer = if let Some(flatten) = &field.flatten {
         if let Some(prefix) = &flatten.prefix {
-            quote! { ::kv_derive_impl::producer::PrefixedFlatteningProducer(self.#ident, #prefix) }
+            quote! { ::kv_derive_impl::producer::PrefixedFlatteningProducer(#value, #prefix) }
         } else {
-            quote! { ::kv_derive_impl::producer::FlatteningProducer(self.#ident) }
+            quote! { ::kv_derive_impl::producer::FlatteningProducer(#value) }
         }
     } else {
-        quote! { self.#ident }
+        quote! { #value }
     };
 
     quote! {
@@ -69,7 +71,7 @@ pub fn from_iter(input: TokenStream) -> TokenStream {
         if let Some(value) = &default_opts.value {
             quote! { #ident: #value, }
         } else {
-            quote! { #ident: <#ty>::default(), }
+            quote! { #ident: <#ty as std::default::Default>::default(), }
         }
     });
 
@@ -101,12 +103,13 @@ fn generate_match_field_consumer(field: &Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
     let key = field.get_key();
     let ty = &field.ty;
+    let as_type = field.representation_type();
 
     quote! {
         #key => {
             <#ty as ::kv_derive_impl::consumer::Consumer>::consume(
                 &mut this.#ident,
-                ::kv_derive_impl::from_repr::FromRepr::from_repr(value)?,
+                #as_type::from_repr(value)?.into(),
             );
         }
     }
@@ -141,7 +144,6 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
     );
 
     let ty = &field.ty;
-    let key = field.get_key();
 
     if let Some(flatten) = &field.flatten {
         let mapping = if let Some(prefix) = &flatten.prefix {
@@ -151,6 +153,9 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
         };
         quote! { #ident: <#ty as ::kv_derive_impl::from_mapping::FromMapping>::from_mapping(#mapping)?, }
     } else {
+        let key = field.get_key();
+        let as_type = field.representation_type();
+
         let missing_handler = if let Some(default) = &field.default {
             if let Some(value) = &default.value {
                 quote! { Ok(#value) }
@@ -168,7 +173,7 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
                     || #missing_handler,
                     |value| ::kv_derive_impl::result::Result::Ok(
                         <#ty as ::kv_derive_impl::consumer::Consumer>::init(
-                            <#ty as ::kv_derive_impl::consumer::Consumer>::Repr::from_repr(value)?,
+                            #as_type::from_repr(value)?.into(),
                         ),
                     ),
                 )?,

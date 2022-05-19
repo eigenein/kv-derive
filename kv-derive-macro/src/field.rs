@@ -1,4 +1,6 @@
 use darling::{FromField, FromMeta};
+use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{Expr, Ident, Type};
 
 #[derive(FromField)]
@@ -17,6 +19,9 @@ pub(crate) struct Field {
 
     #[darling(default)]
     pub default: Option<DefaultOpts>,
+
+    #[darling(default)]
+    pub via: Option<Type>,
 }
 
 #[derive(Default, FromMeta)]
@@ -32,6 +37,7 @@ pub(crate) struct DefaultOpts {
 }
 
 impl Field {
+    /// Gets the target key, either the field name or a custom key.
     pub fn get_key(&self) -> String {
         if let Some(custom_key) = &self.custom_key {
             return custom_key.clone();
@@ -42,9 +48,19 @@ impl Field {
         panic!("the field is missing the identifier, did you mean to use `[kv(rename = …)]` or `[kv(flatten(…))]`?")
     }
 
+    /// Unwraps the field identifier. Placeholder to support unnamed fields in future.
     pub fn get_ident(&self) -> &Ident {
         self.ident
             .as_ref()
             .expect("unnamed fields are not implemented")
+    }
+
+    pub fn representation_type(&self) -> TokenStream {
+        let ty = &self.ty;
+        if let Some(via) = &self.via {
+            quote! { <#via as ::kv_derive_impl::from_repr::FromRepr> }
+        } else {
+            quote! { <#ty as ::kv_derive_impl::consumer::Consumer>::Repr }
+        }
     }
 }

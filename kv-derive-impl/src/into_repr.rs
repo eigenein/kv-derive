@@ -41,4 +41,6 @@ impl_repr!(f32);
 impl_repr!(f64);
 
 impl_repr!(std::net::IpAddr);
+impl_repr!(std::net::Ipv4Addr);
+impl_repr!(std::net::Ipv6Addr);
 impl_repr!(std::net::SocketAddr);

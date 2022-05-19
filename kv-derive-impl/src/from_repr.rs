@@ -41,4 +41,6 @@ impl_repr!(f64, Error::ParseFloatError);
 impl_repr!(String, Error::Infallible);
 
 impl_repr!(std::net::IpAddr, Error::AddrParseError);
+impl_repr!(std::net::Ipv4Addr, Error::AddrParseError);
+impl_repr!(std::net::Ipv6Addr, Error::AddrParseError);
 impl_repr!(std::net::SocketAddr, Error::AddrParseError);
