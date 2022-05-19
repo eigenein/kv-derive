@@ -138,11 +138,21 @@ struct Foo {
     
     #[kv(default(value = "42"))]
     qux: i32,
+    
+    #[kv(default())]
+    quux: Option<i32>,
+    
+    #[kv(default(value = "Some(100500)"))]
+    quuux: Option<i32>,
 }
 
 let foo = Foo::from_mapping(&HashMap::<String, String>::new()).unwrap();
-assert_eq!(foo, Foo { bar: 0, qux: 42 });
+assert_eq!(foo, Foo { bar: 0, qux: 42, quux: None, quuux: Some(100500) });
 ```
+
+#### Note for `#[derive(FromIter)]`
+
+`#[derive(FromIter)]` **requires** that all fields are marked with `#[default(…)]` for consistency.
 
 ### Renaming fields with `kv(rename = …)`
 
@@ -193,6 +203,26 @@ struct Foo {
 
 let actual = Foo::from_iter(vec![("bar", "42".into()), ("bar", "100500".into())]).unwrap();
 let expected = Foo { bar: vec![42, 100500] };
+assert_eq!(actual, expected);
+```
+
+#### Note for `#[derive(FromMapping)]`
+
+`HashMap` or `BTreeMap` cannot contain duplicate keys. However, for consistency, singular values are properly converted to `Vec`s:
+
+```rust
+use std::collections::HashMap;
+
+use kv_derive::prelude::*;
+
+#[derive(FromMapping, Debug, PartialEq)]
+struct Foo {
+    bar: Vec<i32>,
+}
+
+let map = HashMap::from([("bar", "42")]);
+let actual = Foo::from_mapping(&map).unwrap();
+let expected = Foo { bar: vec![42] };
 assert_eq!(actual, expected);
 ```
 

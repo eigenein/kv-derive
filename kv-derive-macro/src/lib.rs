@@ -161,7 +161,7 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
             .get(#key)
             .map_or_else(
                 || #missing_handler,
-                ::kv_derive_impl::from_repr::FromRepr::from_repr,
+                ::kv_derive_impl::consumer::Consumer::init,
             )?,
     }
 }
