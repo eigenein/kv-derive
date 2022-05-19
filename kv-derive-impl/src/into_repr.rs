@@ -22,6 +22,8 @@ macro_rules! impl_repr {
 
 impl_repr!(&str);
 
+impl_repr!(bool);
+
 impl_repr!(i8);
 impl_repr!(u8);
 impl_repr!(i16);
@@ -37,3 +39,6 @@ impl_repr!(usize);
 
 impl_repr!(f32);
 impl_repr!(f64);
+
+impl_repr!(std::net::IpAddr);
+impl_repr!(std::net::SocketAddr);

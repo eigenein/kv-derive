@@ -20,6 +20,8 @@ macro_rules! impl_repr {
     };
 }
 
+impl_repr!(bool, Error::ParseBoolError);
+
 impl_repr!(i8, Error::ParseIntError);
 impl_repr!(u8, Error::ParseIntError);
 impl_repr!(i16, Error::ParseIntError);
@@ -37,3 +39,6 @@ impl_repr!(f32, Error::ParseFloatError);
 impl_repr!(f64, Error::ParseFloatError);
 
 impl_repr!(String, Error::Infallible);
+
+impl_repr!(std::net::IpAddr, Error::AddrParseError);
+impl_repr!(std::net::SocketAddr, Error::AddrParseError);

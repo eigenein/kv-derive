@@ -6,6 +6,10 @@ pub enum Error {
     #[error("missing key: `{0}`")]
     MissingKey(&'static str),
 
+    /// Could not parse a boolean value.
+    #[error("could not parse a boolean value")]
+    ParseBoolError(#[from] std::str::ParseBoolError),
+
     /// Could not parse an integer.
     #[error("could not parse an integer")]
     ParseIntError(#[from] std::num::ParseIntError),
@@ -13,6 +17,10 @@ pub enum Error {
     /// Could not parse a floating-point number.
     #[error("could not parse a floating-point number")]
     ParseFloatError(#[from] std::num::ParseFloatError),
+
+    /// Could not parse a network address.
+    #[error("could not parse a network address")]
+    AddrParseError(#[from] std::net::AddrParseError),
 
     #[error("infallible")]
     Infallible(#[from] std::convert::Infallible),
