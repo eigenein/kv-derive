@@ -11,6 +11,9 @@ on:
 permissions:
   checks: write
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   check:
     name: Check
