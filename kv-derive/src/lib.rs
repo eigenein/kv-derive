@@ -2,10 +2,8 @@
 
 pub mod prelude;
 
-pub use kv_derive_impl::error::Error;
-pub use kv_derive_impl::result::Result;
-
-pub use crate::prelude::*;
+pub use kv_derive_impl::*;
+pub use kv_derive_macro::*;
 
 #[cfg(doctest)]
 mod test_readme {

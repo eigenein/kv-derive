@@ -13,6 +13,7 @@ Derive `struct` conversions from and to string key-value vectors using [`ToStrin
 
 ```rust
 use kv_derive::prelude::*;
+use kv_derive::IntoVec;
 
 #[derive(IntoVec)]
 struct Foo {
@@ -31,6 +32,7 @@ assert_eq!(foo.into_vec(), vec![
 
 ```rust
 use kv_derive::prelude::*;
+use kv_derive::FromIter;
 
 #[derive(FromIter, Debug, PartialEq)]
 struct Foo {
@@ -52,6 +54,7 @@ assert_eq!(actual, expected);
 use std::collections::HashMap;
 
 use kv_derive::prelude::*;
+use kv_derive::FromMapping;
 
 #[derive(FromMapping, Debug, PartialEq)]
 struct Foo {
@@ -71,6 +74,7 @@ Missing key causes the error:
 use std::collections::HashMap;
 
 use kv_derive::prelude::*;
+use kv_derive::FromMapping;
 
 #[derive(FromMapping, Debug, PartialEq)]
 struct Foo {
@@ -80,7 +84,7 @@ struct Foo {
 
 let mapping = HashMap::from([("bar", "42")]);
 let actual = Foo::from_mapping(&mapping);
-assert_eq!(actual, Err(kv_derive::Error::MissingKey("qux")));
+assert_eq!(actual, Err(kv_derive::error::Error::MissingKey("qux")));
 ```
 
 ## Customizing fields
@@ -91,6 +95,7 @@ assert_eq!(actual, Err(kv_derive::Error::MissingKey("qux")));
 
 ```rust
 use kv_derive::prelude::*;
+use kv_derive::IntoVec;
 
 #[derive(IntoVec)]
 struct Foo {
@@ -106,6 +111,7 @@ and left out with their defaults while converting back to the struct:
 
 ```rust
 use kv_derive::prelude::*;
+use kv_derive::FromIter;
 
 #[derive(FromIter, Debug, PartialEq)]
 struct Foo {
@@ -130,6 +136,7 @@ assert_eq!(actual, expected);
 use std::collections::HashMap;
 
 use kv_derive::prelude::*;
+use kv_derive::FromMapping;
 
 #[derive(FromMapping, Debug, PartialEq)]
 struct Foo {
@@ -160,6 +167,7 @@ Uses the specified key instead of the identifier:
 
 ```rust
 use kv_derive::prelude::*;
+use kv_derive::IntoVec;
 
 #[derive(IntoVec)]
 struct Foo {
@@ -179,6 +187,7 @@ You can specify an intermediate type, which will be used to derive textual repre
 use std::net::Ipv4Addr;
 
 use kv_derive::prelude::*;
+use kv_derive::IntoVec;
 
 #[derive(IntoVec)]
 struct Foo {
@@ -193,10 +202,10 @@ assert_eq!(foo.into_vec(), vec![("bar".into(), "2130706433".into())]);
 And [`std::convert::Into`] for [`crate::FromIter`]:
 
 ```rust
-use std::collections::HashMap;
 use std::net::Ipv4Addr;
 
 use kv_derive::prelude::*;
+use kv_derive::FromIter;
 
 #[derive(FromIter, Debug, PartialEq)]
 struct Foo {
@@ -216,6 +225,7 @@ use std::collections::HashMap;
 use std::net::Ipv4Addr;
 
 use kv_derive::prelude::*;
+use kv_derive::FromMapping;
 
 #[derive(FromMapping, Debug, PartialEq)]
 struct Foo {
@@ -235,6 +245,7 @@ Vector field emits multiple entries with the same key:
 
 ```rust
 use kv_derive::prelude::*;
+use kv_derive::IntoVec;
 
 #[derive(IntoVec)]
 struct Foo {
@@ -252,6 +263,7 @@ which can be recollected back:
 
 ```rust
 use kv_derive::prelude::*;
+use kv_derive::FromIter;
 
 #[derive(FromIter, Debug, PartialEq)]
 struct Foo {
@@ -272,6 +284,7 @@ assert_eq!(actual, expected);
 use std::collections::HashMap;
 
 use kv_derive::prelude::*;
+use kv_derive::FromMapping;
 
 #[derive(FromMapping, Debug, PartialEq)]
 struct Foo {
@@ -292,6 +305,7 @@ It is possible to «flatten» an inner structure:
 
 ```rust
 use kv_derive::prelude::*;
+use kv_derive::IntoVec;
 
 #[derive(IntoVec)]
 struct Bar {
@@ -316,6 +330,7 @@ It's **not** possible to derive [`FromIter`](crate::prelude::FromIter) for a str
 use std::collections::HashMap;
 
 use kv_derive::prelude::*;
+use kv_derive::FromMapping;
 
 #[derive(FromMapping, Debug, PartialEq)]
 struct Inner {
@@ -340,6 +355,7 @@ It's also possible to prefix all the inner fields with a same prefix:
 
 ```rust
 use kv_derive::prelude::*;
+use kv_derive::IntoVec;
 
 #[derive(IntoVec)]
 struct Bar {
@@ -362,6 +378,7 @@ And back:
 use std::collections::HashMap;
 
 use kv_derive::prelude::*;
+use kv_derive::FromMapping;
 
 #[derive(FromMapping, Debug, PartialEq)]
 struct Inner {

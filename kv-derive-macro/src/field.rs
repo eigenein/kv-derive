@@ -58,9 +58,9 @@ impl Field {
     pub fn representation_type(&self) -> TokenStream {
         let ty = &self.ty;
         if let Some(via) = &self.via {
-            quote! { <#via as ::kv_derive_impl::from_repr::FromRepr> }
+            quote! { <#via as ::kv_derive::from_repr::FromRepr> }
         } else {
-            quote! { <#ty as ::kv_derive_impl::consumer::Consumer>::Repr }
+            quote! { <#ty as ::kv_derive::consumer::Consumer>::Repr }
         }
     }
 }
