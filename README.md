@@ -398,3 +398,24 @@ assert_eq!(actual, expected);
 ```
 
 ## Deriving [`crate::IntoRepr`] and [`crate::FromRepr`]
+
+This is implemented only for new-type `struct`s:
+
+```rust
+use kv_derive::prelude::*;
+use kv_derive::{IntoRepr, FromRepr};
+
+#[derive(IntoRepr, FromRepr, PartialEq, Debug)]
+struct WrappedI32(i32);
+
+assert_eq!(WrappedI32(42).into_repr(), "42");
+assert_eq!(WrappedI32::from_repr("42").unwrap(), WrappedI32(42));
+```
+
+This is useful if you need to implement a custom conversion:
+
+- Define a new-type `struct`
+- Implement [`std::convert::From`] between it and the actual field type
+- Specify the new-type struct with `#[kv(via = …)]` attribute
+
+See [`kv_derive_util::BooleanAsU8`] for an example.

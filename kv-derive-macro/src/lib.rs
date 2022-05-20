@@ -2,14 +2,14 @@ use proc_macro::TokenStream;
 use quote::quote;
 
 use crate::field::Field;
-use crate::opts::{get_fields, parse_opts, MacroOpts};
+use crate::opts::{get_fields, get_single_tuple_field, parse_opts, MacroOpts, ReprMacroOpts};
 
 mod field;
 mod opts;
 
 /// Derives [`kv_derive::into_vec::IntoVec`].
 #[proc_macro_derive(IntoVec, attributes(kv))]
-pub fn into_vec(input: TokenStream) -> TokenStream {
+pub fn derive_into_vec(input: TokenStream) -> TokenStream {
     let opts: MacroOpts = parse_opts(input);
     let ident = opts.ident;
     let generics = opts.generics;
@@ -53,7 +53,7 @@ fn generate_field_producer(field: Field) -> proc_macro2::TokenStream {
 
 /// Derives [`kv_derive::from_iter::FromIter`].
 #[proc_macro_derive(FromIter, attributes(kv))]
-pub fn from_iter(input: TokenStream) -> TokenStream {
+pub fn derive_from_iter(input: TokenStream) -> TokenStream {
     let opts: MacroOpts = parse_opts(input);
     let ident = opts.ident;
     let generics = opts.generics;
@@ -117,7 +117,7 @@ fn generate_match_field_consumer(field: &Field) -> proc_macro2::TokenStream {
 
 /// Derives [`kv_derive::from_mapping::FromMapping`].
 #[proc_macro_derive(FromMapping, attributes(kv))]
-pub fn from_mapping(input: TokenStream) -> TokenStream {
+pub fn derive_from_mapping(input: TokenStream) -> TokenStream {
     let opts: MacroOpts = parse_opts(input);
     let ident = opts.ident;
     let generics = opts.generics;
@@ -179,4 +179,40 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
                 )?,
         }
     }
+}
+
+/// Derives [`crate::into_repr::IntoRepr`].
+#[proc_macro_derive(IntoRepr, attributes(kv))]
+pub fn derive_into_repr(input: TokenStream) -> TokenStream {
+    let opts: ReprMacroOpts = parse_opts(input);
+    let ident = opts.ident;
+    let generics = opts.generics;
+    let ty = &get_single_tuple_field(opts.data).ty;
+
+    let tokens = quote! {
+        impl #generics ::kv_derive::into_repr::IntoRepr for #ident #generics {
+            fn into_repr(self) -> String {
+                <#ty as ::kv_derive::into_repr::IntoRepr>::into_repr(self.0)
+            }
+        }
+    };
+    tokens.into()
+}
+
+/// Derives [`crate::from_repr::FromRepr`].
+#[proc_macro_derive(FromRepr, attributes(kv))]
+pub fn derive_from_repr(input: TokenStream) -> TokenStream {
+    let opts: ReprMacroOpts = parse_opts(input);
+    let ident = opts.ident;
+    let generics = opts.generics;
+    let ty = &get_single_tuple_field(opts.data).ty;
+
+    let tokens = quote! {
+        impl #generics ::kv_derive::from_repr::FromRepr for #ident #generics {
+            fn from_repr(string: &str) -> ::kv_derive::result::Result<Self> {
+                <#ty as ::kv_derive::from_repr::FromRepr>::from_repr(string).map(Self)
+            }
+        }
+    };
+    tokens.into()
 }
