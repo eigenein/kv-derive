@@ -299,7 +299,7 @@ assert_eq!(actual, expected);
 
 ## Flattening
 
-### Simple
+### Simple flattening
 
 It is possible to «flatten» an inner structure:
 
@@ -349,7 +349,7 @@ let expected = Outer { inner: Inner { bar: 42 } };
 assert_eq!(actual, expected);
 ```
 
-### Prefixed
+### Prefixed flattening
 
 It's also possible to prefix all the inner fields with a same prefix:
 
@@ -396,3 +396,5 @@ let actual = Outer::from_mapping(&map).unwrap();
 let expected = Outer { inner: Inner { bar: 42 } };
 assert_eq!(actual, expected);
 ```
+
+## Deriving [`crate::IntoRepr`] and [`crate::FromRepr`]

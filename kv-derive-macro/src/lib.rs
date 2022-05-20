@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 
 use crate::field::Field;
-use crate::opts::{get_fields, MacroOpts};
+use crate::opts::{get_fields, parse_opts, MacroOpts};
 
 mod field;
 mod opts;
@@ -10,7 +10,7 @@ mod opts;
 /// Derives [`kv_derive::into_vec::IntoVec`].
 #[proc_macro_derive(IntoVec, attributes(kv))]
 pub fn into_vec(input: TokenStream) -> TokenStream {
-    let opts = MacroOpts::parse(input);
+    let opts: MacroOpts = parse_opts(input);
     let ident = opts.ident;
     let generics = opts.generics;
     let field_producers = get_fields(opts.data)
@@ -54,7 +54,7 @@ fn generate_field_producer(field: Field) -> proc_macro2::TokenStream {
 /// Derives [`kv_derive::from_iter::FromIter`].
 #[proc_macro_derive(FromIter, attributes(kv))]
 pub fn from_iter(input: TokenStream) -> TokenStream {
-    let opts = MacroOpts::parse(input);
+    let opts: MacroOpts = parse_opts(input);
     let ident = opts.ident;
     let generics = opts.generics;
     let fields = get_fields(opts.data);
@@ -118,7 +118,7 @@ fn generate_match_field_consumer(field: &Field) -> proc_macro2::TokenStream {
 /// Derives [`kv_derive::from_mapping::FromMapping`].
 #[proc_macro_derive(FromMapping, attributes(kv))]
 pub fn from_mapping(input: TokenStream) -> TokenStream {
-    let opts = MacroOpts::parse(input);
+    let opts: MacroOpts = parse_opts(input);
     let ident = opts.ident;
     let generics = opts.generics;
     let mapped_fields = get_fields(opts.data).into_iter().map(generate_mapped_field);

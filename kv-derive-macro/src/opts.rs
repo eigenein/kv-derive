@@ -6,7 +6,7 @@ use syn::{Generics, Ident};
 
 use crate::field::Field;
 
-/// The macro options.
+/// Macro options for [`crate::IntoVec`], [`crate::FromIter`] and [`crate::FromMapping`].
 #[derive(FromDeriveInput)]
 #[darling(supports(struct_named, struct_unit), forward_attrs(allow, doc, cfg))]
 pub(crate) struct MacroOpts {
@@ -15,11 +15,9 @@ pub(crate) struct MacroOpts {
     pub data: Data<Ignored, Field>,
 }
 
-impl MacroOpts {
-    pub(crate) fn parse(input: TokenStream) -> Self {
-        let ast = syn::parse(input).expect("failed to parse the input");
-        Self::from_derive_input(&ast).expect("failed to parse the macro options")
-    }
+pub(crate) fn parse_opts<T: FromDeriveInput>(input: TokenStream) -> T {
+    let ast = syn::parse(input).expect("failed to parse the input");
+    T::from_derive_input(&ast).expect("failed to parse the macro options")
 }
 
 pub(crate) fn get_fields(data: Data<Ignored, Field>) -> Vec<Field> {
