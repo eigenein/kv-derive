@@ -176,7 +176,7 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
 
         quote! {
             #ident: mapping
-                .get(#key)
+                .get_value(#key)
                 .map_or_else(
                     || #missing_handler,
                     |value| ::kv_derive::result::Result::Ok(#value),
