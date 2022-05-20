@@ -21,7 +21,7 @@ pub fn derive_into_vec(input: TokenStream) -> TokenStream {
         impl #generics ::kv_derive::into_vec::IntoVec for #ident #generics {
             fn into_iter(self) -> Box<dyn Iterator<Item = (String, String)>> {
                 Box::new(
-                    std::iter::empty()
+                    (std::iter::empty())
                     #(#field_producers)*
                 )
             }
@@ -33,15 +33,20 @@ pub fn derive_into_vec(input: TokenStream) -> TokenStream {
 fn generate_field_producer(field: Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
     let key = field.get_key();
+    let value = if let Some(into_repr_with) = &field.into_repr_with {
+        quote! { (#into_repr_with)(self.#ident) }
+    } else {
+        quote! { (self.#ident) }
+    };
 
     let producer = if let Some(flatten) = &field.flatten {
         if let Some(prefix) = &flatten.prefix {
-            quote! { ::kv_derive::producer::PrefixedFlatteningProducer(self.#ident, #prefix) }
+            quote! { (::kv_derive::producer::PrefixedFlatteningProducer(#value, #prefix)) }
         } else {
-            quote! { ::kv_derive::producer::FlatteningProducer(self.#ident) }
+            quote! { (::kv_derive::producer::FlatteningProducer(#value)) }
         }
     } else {
-        quote! { self.#ident }
+        quote! { (#value) }
     };
 
     quote! {
@@ -67,9 +72,9 @@ pub fn derive_from_iter(input: TokenStream) -> TokenStream {
             .as_ref()
             .expect("`FromIter` requires `#[kv(default(…))]` on each field");
         if let Some(value) = &default_opts.value {
-            quote! { #ident: #value, }
+            quote! { #ident: (#value), }
         } else {
-            quote! { #ident: <#ty as std::default::Default>::default(), }
+            quote! { #ident: (<#ty as std::default::Default>::default()), }
         }
     });
 
@@ -102,13 +107,13 @@ fn generate_match_field_consumer(field: &Field) -> proc_macro2::TokenStream {
     let key = field.get_key();
     let ty = &field.ty;
 
+    let mut value = quote! { ::kv_derive::from_repr::FromRepr::from_repr(value)? };
+    if let Some(from_repr_with) = &field.from_repr_with {
+        value = quote! { ((#from_repr_with)(#value)?) };
+    }
+
     quote! {
-        #key => {
-            <#ty as ::kv_derive::consumer::Consumer>::consume(
-                &mut this.#ident,
-                ::kv_derive::from_repr::FromRepr::from_repr(value)?,
-            );
-        }
+        #key => { <#ty as ::kv_derive::consumer::Consumer>::consume(&mut this.#ident, #value); }
     }
 }
 
@@ -140,15 +145,13 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
         ident,
     );
 
-    let ty = &field.ty;
-
     if let Some(flatten) = &field.flatten {
         let mapping = if let Some(prefix) = &flatten.prefix {
-            quote! { ::kv_derive::from_mapping::PrefixedMapping(mapping, #prefix) }
+            quote! { (::kv_derive::from_mapping::PrefixedMapping(mapping, #prefix)) }
         } else {
-            quote! { mapping }
+            quote! { (mapping) }
         };
-        quote! { #ident: <#ty as ::kv_derive::from_mapping::FromMapping>::from_mapping(#mapping)?, }
+        quote! { #ident: ::kv_derive::from_mapping::FromMapping::from_mapping(#mapping)?, }
     } else {
         let key = field.get_key();
 
@@ -156,22 +159,27 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
             if let Some(value) = &default.value {
                 quote! { Ok(#value) }
             } else {
-                quote! { Ok(<#ty>::default()) }
+                quote! { Ok(std::default::Default::default()) }
             }
         } else {
             quote! { Err(::kv_derive::error::Error::MissingKey(#key)) }
         };
+
+        let mut value = quote! {
+            ::kv_derive::consumer::Consumer::init(
+                ::kv_derive::from_repr::FromRepr::from_repr(value)?,
+            )
+        };
+        if let Some(from_repr_with) = &field.from_repr_with {
+            value = quote! { ((#from_repr_with)(#value)?) };
+        }
 
         quote! {
             #ident: mapping
                 .get(#key)
                 .map_or_else(
                     || #missing_handler,
-                    |value| ::kv_derive::result::Result::Ok(
-                        <#ty as ::kv_derive::consumer::Consumer>::init(
-                            ::kv_derive::from_repr::FromRepr::from_repr(value)?,
-                        ),
-                    ),
+                    |value| ::kv_derive::result::Result::Ok(#value),
                 )?,
         }
     }

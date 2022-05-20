@@ -179,6 +179,32 @@ let foo = Foo { bar: 42 };
 assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 ```
 
+### Convert to and from another representation
+
+```rust
+use std::collections::HashMap;
+
+use kv_derive::prelude::*;
+use kv_derive::{IntoVec, FromIter, FromMapping};
+
+#[derive(IntoVec, FromIter, FromMapping, PartialEq, Debug)]
+struct Foo {
+    #[kv(
+        default(),
+        into_repr_with = "|value| value as i32",
+        from_repr_with = "|value: i32| kv_derive::result::Result::Ok(value != 0)",
+    )]
+    bar: bool,
+}
+
+assert_eq!(Foo { bar: true }.into_vec(), vec![("bar".into(), "1".into())]);
+
+assert_eq!(Foo::from_iter(vec![("bar", "1")]).unwrap(), Foo { bar: true });
+assert_eq!(Foo::from_mapping(HashMap::from([("bar", "1")])).unwrap(), Foo { bar: true });
+```
+
+Note, that `into_repr_with` is applied to the field, while `from_repr_with` is applied to a single value form the input. For scalar values these are the same, but e.g. for [`std::vec::Vec`] they are different.
+
 ### [`std::vec::Vec`] fields
 
 Vector field emits multiple entries with the same key:

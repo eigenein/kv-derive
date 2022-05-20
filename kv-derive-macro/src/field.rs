@@ -19,6 +19,12 @@ pub(crate) struct Field {
     /// Default value.
     #[darling(default)]
     pub default: Option<DefaultOpts>,
+
+    #[darling(default)]
+    pub from_repr_with: Option<Expr>,
+
+    #[darling(default)]
+    pub into_repr_with: Option<Expr>,
 }
 
 #[derive(Default, FromMeta)]
