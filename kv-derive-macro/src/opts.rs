@@ -16,15 +16,6 @@ pub(crate) struct MacroOpts {
     pub data: Data<Ignored, Field>,
 }
 
-/// Macro options for [`crate::FromRepr`] and [`crate::IntoRepr`].
-#[derive(FromDeriveInput)]
-#[darling(supports(struct_newtype), forward_attrs(allow, doc, cfg))]
-pub(crate) struct ReprMacroOpts {
-    pub ident: Ident,
-    pub generics: Generics,
-    pub data: Data<Ignored, Field>,
-}
-
 pub(crate) fn parse_opts<T: FromDeriveInput>(input: TokenStream) -> T {
     let ast = syn::parse(input).expect("failed to parse the input");
     T::from_derive_input(&ast).expect("failed to parse the macro options")
@@ -35,12 +26,4 @@ pub(crate) fn get_fields(data: Data<Ignored, Field>) -> Vec<Field> {
         Data::Enum(_) => unimplemented!("enums are not implemented"),
         Data::Struct(fields) => fields.fields,
     }
-}
-
-pub(crate) fn get_single_tuple_field(data: Data<Ignored, Field>) -> Field {
-    let fields = get_fields(data);
-    assert_eq!(fields.len(), 1, "expected exactly one field");
-    let field = fields.into_iter().next().unwrap();
-    assert!(field.ident.is_none(), "expected a tuple struct");
-    field
 }

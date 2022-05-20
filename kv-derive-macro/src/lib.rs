@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 
 use crate::field::Field;
-use crate::opts::{get_fields, get_single_tuple_field, parse_opts, MacroOpts, ReprMacroOpts};
+use crate::opts::{get_fields, parse_opts, MacroOpts};
 
 mod field;
 mod opts;
@@ -33,17 +33,15 @@ pub fn derive_into_vec(input: TokenStream) -> TokenStream {
 fn generate_field_producer(field: Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
     let key = field.get_key();
-    let as_type = field.via.as_ref().unwrap_or(&field.ty);
-    let value = quote! { Into::<#as_type>::into(self.#ident) };
 
     let producer = if let Some(flatten) = &field.flatten {
         if let Some(prefix) = &flatten.prefix {
-            quote! { ::kv_derive::producer::PrefixedFlatteningProducer(#value, #prefix) }
+            quote! { ::kv_derive::producer::PrefixedFlatteningProducer(self.#ident, #prefix) }
         } else {
-            quote! { ::kv_derive::producer::FlatteningProducer(#value) }
+            quote! { ::kv_derive::producer::FlatteningProducer(self.#ident) }
         }
     } else {
-        quote! { #value }
+        quote! { self.#ident }
     };
 
     quote! {
@@ -103,13 +101,12 @@ fn generate_match_field_consumer(field: &Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
     let key = field.get_key();
     let ty = &field.ty;
-    let as_type = field.representation_type();
 
     quote! {
         #key => {
             <#ty as ::kv_derive::consumer::Consumer>::consume(
                 &mut this.#ident,
-                #as_type::from_repr(value)?.into(),
+                ::kv_derive::from_repr::FromRepr::from_repr(value)?,
             );
         }
     }
@@ -154,7 +151,6 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
         quote! { #ident: <#ty as ::kv_derive::from_mapping::FromMapping>::from_mapping(#mapping)?, }
     } else {
         let key = field.get_key();
-        let as_type = field.representation_type();
 
         let missing_handler = if let Some(default) = &field.default {
             if let Some(value) = &default.value {
@@ -173,46 +169,10 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
                     || #missing_handler,
                     |value| ::kv_derive::result::Result::Ok(
                         <#ty as ::kv_derive::consumer::Consumer>::init(
-                            #as_type::from_repr(value)?.into(),
+                            ::kv_derive::from_repr::FromRepr::from_repr(value)?,
                         ),
                     ),
                 )?,
         }
     }
-}
-
-/// Derives [`crate::into_repr::IntoRepr`].
-#[proc_macro_derive(IntoRepr, attributes(kv))]
-pub fn derive_into_repr(input: TokenStream) -> TokenStream {
-    let opts: ReprMacroOpts = parse_opts(input);
-    let ident = opts.ident;
-    let generics = opts.generics;
-    let ty = &get_single_tuple_field(opts.data).ty;
-
-    let tokens = quote! {
-        impl #generics ::kv_derive::into_repr::IntoRepr for #ident #generics {
-            fn into_repr(self) -> String {
-                <#ty as ::kv_derive::into_repr::IntoRepr>::into_repr(self.0)
-            }
-        }
-    };
-    tokens.into()
-}
-
-/// Derives [`crate::from_repr::FromRepr`].
-#[proc_macro_derive(FromRepr, attributes(kv))]
-pub fn derive_from_repr(input: TokenStream) -> TokenStream {
-    let opts: ReprMacroOpts = parse_opts(input);
-    let ident = opts.ident;
-    let generics = opts.generics;
-    let ty = &get_single_tuple_field(opts.data).ty;
-
-    let tokens = quote! {
-        impl #generics ::kv_derive::from_repr::FromRepr for #ident #generics {
-            fn from_repr(string: &str) -> ::kv_derive::result::Result<Self> {
-                <#ty as ::kv_derive::from_repr::FromRepr>::from_repr(string).map(Self)
-            }
-        }
-    };
-    tokens.into()
 }

@@ -3,5 +3,4 @@ members = [
     "kv-derive",
     "kv-derive-impl",
     "kv-derive-macro",
-    "kv-derive-util",
 ]

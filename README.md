@@ -179,66 +179,6 @@ let foo = Foo { bar: 42 };
 assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 ```
 
-### Specifying an intermediate type
-
-You can specify an intermediate type, which will be used to derive textual representation – instead of the field type itself. The `via` type must implement [`std::convert::From`] for [`crate::IntoVec`]:
-
-```rust
-use std::net::Ipv4Addr;
-
-use kv_derive::prelude::*;
-use kv_derive::IntoVec;
-
-#[derive(IntoVec)]
-struct Foo {
-    #[kv(via = "u32")]
-    bar: Ipv4Addr,
-}
-
-let foo = Foo { bar: Ipv4Addr::LOCALHOST };
-assert_eq!(foo.into_vec(), vec![("bar".into(), "2130706433".into())]);
-```
-
-And [`std::convert::Into`] for [`crate::FromIter`]:
-
-```rust
-use std::net::Ipv4Addr;
-
-use kv_derive::prelude::*;
-use kv_derive::FromIter;
-
-#[derive(FromIter, Debug, PartialEq)]
-struct Foo {
-    #[kv(via = "u32", default())]
-    bar: Option<Ipv4Addr>,
-}
-
-let actual = Foo::from_iter(vec![("bar", "2130706433")]).unwrap();
-let expected = Foo { bar: Some(Ipv4Addr::LOCALHOST) };
-assert_eq!(actual, expected);
-```
-
-Or for [`crate::FromMapping`]:
-
-```rust
-use std::collections::HashMap;
-use std::net::Ipv4Addr;
-
-use kv_derive::prelude::*;
-use kv_derive::FromMapping;
-
-#[derive(FromMapping, Debug, PartialEq)]
-struct Foo {
-    #[kv(via = "u32")]
-    bar: Ipv4Addr,
-}
-
-let mapping = HashMap::from([("bar", "2130706433")]);
-let actual = Foo::from_mapping(&mapping).unwrap();
-let expected = Foo { bar: Ipv4Addr::LOCALHOST };
-assert_eq!(actual, expected);
-```
-
 ### [`std::vec::Vec`] fields
 
 Vector field emits multiple entries with the same key:
@@ -396,26 +336,3 @@ let actual = Outer::from_mapping(&map).unwrap();
 let expected = Outer { inner: Inner { bar: 42 } };
 assert_eq!(actual, expected);
 ```
-
-## Deriving [`crate::IntoRepr`] and [`crate::FromRepr`]
-
-This is implemented only for new-type `struct`s:
-
-```rust
-use kv_derive::prelude::*;
-use kv_derive::{IntoRepr, FromRepr};
-
-#[derive(IntoRepr, FromRepr, PartialEq, Debug)]
-struct WrappedI32(i32);
-
-assert_eq!(WrappedI32(42).into_repr(), "42");
-assert_eq!(WrappedI32::from_repr("42").unwrap(), WrappedI32(42));
-```
-
-This is useful if you need to implement a custom conversion:
-
-- Define a new-type `struct`
-- Implement [`std::convert::From`] between it and the actual field type
-- Specify the new-type struct with `#[kv(via = …)]` attribute
-
-See [`kv_derive_util::BooleanAsU8`] for an example.

@@ -52,7 +52,5 @@ jobs:
           cargo publish --allow-dirty -p kv-derive-macro
           sleep 15
           cargo publish --allow-dirty -p kv-derive
-          sleep 15
-          cargo publish --allow-dirty -p kv-derive-util
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

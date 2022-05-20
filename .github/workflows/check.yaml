@@ -41,7 +41,6 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --features chrono
 
       - name: Clippy
         uses: actions-rs/clippy-check@v1

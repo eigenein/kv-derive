@@ -1,6 +1,4 @@
 use darling::{FromField, FromMeta};
-use proc_macro2::TokenStream;
-use quote::quote;
 use syn::{Expr, Ident, Type};
 
 #[derive(FromField)]
@@ -21,10 +19,6 @@ pub(crate) struct Field {
     /// Default value.
     #[darling(default)]
     pub default: Option<DefaultOpts>,
-
-    /// Intermediate type that should be used to represent an actual value.
-    #[darling(default)]
-    pub via: Option<Type>,
 }
 
 #[derive(Default, FromMeta)]
@@ -57,14 +51,5 @@ impl Field {
         self.ident
             .as_ref()
             .expect("unnamed fields are not implemented")
-    }
-
-    pub fn representation_type(&self) -> TokenStream {
-        let ty = &self.ty;
-        if let Some(via) = &self.via {
-            quote! { <#via as ::kv_derive::from_repr::FromRepr> }
-        } else {
-            quote! { <#ty as ::kv_derive::consumer::Consumer>::Repr }
-        }
     }
 }
