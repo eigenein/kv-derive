@@ -1,4 +1,6 @@
 use darling::{FromField, FromMeta};
+use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{Expr, Ident, Type};
 
 #[derive(FromField)]
@@ -19,6 +21,12 @@ pub(crate) struct Field {
     /// Default value.
     #[darling(default)]
     pub default: Option<DefaultOpts>,
+
+    #[darling(default, rename = "optional")]
+    pub is_optional: bool,
+
+    #[darling(default, rename = "collection")]
+    pub is_collection: bool,
 
     #[darling(default)]
     pub from_repr_with: Option<Expr>,
@@ -57,5 +65,28 @@ impl Field {
         self.ident
             .as_ref()
             .expect("unnamed fields are not implemented")
+    }
+
+    /// Builds a field consumer based on the attributes.
+    pub fn consumer(&self) -> TokenStream {
+        let mut consumer = quote! {
+            ::kv_derive::consumer::ScalarConsumer(std::marker::PhantomData)
+        };
+        if self.is_optional {
+            consumer = quote! { ::kv_derive::consumer::OptionConsumer(#consumer) };
+        }
+        if self.is_collection {
+            consumer = quote! { ::kv_derive::consumer::CollectionConsumer(#consumer) };
+        }
+        consumer
+    }
+
+    /// Wraps the value with an expression of `from_repr_with`, if specified.
+    pub fn wrap_from_repr_with(&self, value: TokenStream) -> TokenStream {
+        if let Some(from_repr_with) = &self.from_repr_with {
+            quote! { ((#from_repr_with)(#value)?) }
+        } else {
+            value
+        }
     }
 }

@@ -33,24 +33,29 @@ pub fn derive_into_vec(input: TokenStream) -> TokenStream {
 fn generate_field_producer(field: Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
     let key = field.get_key();
-    let value = if let Some(into_repr_with) = &field.into_repr_with {
-        quote! { (#into_repr_with)(self.#ident) }
-    } else {
-        quote! { (self.#ident) }
-    };
+    let value = quote! { self.#ident };
 
-    let producer = if let Some(flatten) = &field.flatten {
+    let mut producer = if let Some(flatten) = &field.flatten {
         if let Some(prefix) = &flatten.prefix {
-            quote! { (::kv_derive::producer::PrefixedFlatteningProducer(#value, #prefix)) }
+            quote! { (::kv_derive::producer::PrefixedFlatteningProducer(#prefix)) }
         } else {
-            quote! { (::kv_derive::producer::FlatteningProducer(#value)) }
+            quote! { (::kv_derive::producer::FlatteningProducer) }
         }
     } else {
-        quote! { (#value) }
+        quote! { ::kv_derive::producer::ScalarProducer }
     };
+    if let Some(into_repr_with) = field.into_repr_with {
+        producer = quote! { ::kv_derive::producer::WrappedProducer(#producer, #into_repr_with) };
+    }
+    if field.is_optional {
+        producer = quote! { ::kv_derive::producer::OptionProducer(#producer) };
+    }
+    if field.is_collection {
+        producer = quote! { ::kv_derive::producer::CollectionProducer(#producer) };
+    }
 
     quote! {
-        .chain(::kv_derive::producer::Producer::produce(#producer, #key))
+        .chain((#producer).produce(#key, (#value)))
     }
 }
 
@@ -105,16 +110,10 @@ fn generate_match_field_consumer(field: &Field) -> proc_macro2::TokenStream {
 
     let ident = field.get_ident();
     let key = field.get_key();
-    let ty = &field.ty;
+    let consumer = field.consumer();
+    let value = field.wrap_from_repr_with(quote! { (std::str::FromStr::from_str(value))? });
 
-    let mut value = quote! { ::kv_derive::from_repr::FromRepr::from_repr(value)? };
-    if let Some(from_repr_with) = &field.from_repr_with {
-        value = quote! { ((#from_repr_with)(#value)?) };
-    }
-
-    quote! {
-        #key => { <#ty as ::kv_derive::consumer::Consumer>::consume(&mut this.#ident, #value); }
-    }
+    quote! { #key => { #consumer.consume(&mut this.#ident, (#value)); } }
 }
 
 /// Derives [`kv_derive::from_mapping::FromMapping`].
@@ -146,12 +145,11 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
     );
 
     if let Some(flatten) = &field.flatten {
-        let mapping = if let Some(prefix) = &flatten.prefix {
-            quote! { (::kv_derive::from_mapping::PrefixedMapping(mapping, #prefix)) }
-        } else {
-            quote! { (mapping) }
+        let mut mapping = quote! { mapping };
+        if let Some(prefix) = &flatten.prefix {
+            mapping = quote! { (::kv_derive::from_mapping::PrefixedMapping((#mapping), #prefix)) }
         };
-        quote! { #ident: ::kv_derive::from_mapping::FromMapping::from_mapping(#mapping)?, }
+        quote! { #ident: ::kv_derive::from_mapping::FromMapping::from_mapping((#mapping))?, }
     } else {
         let key = field.get_key();
 
@@ -165,21 +163,15 @@ fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
             quote! { Err(::kv_derive::error::Error::MissingKey(#key)) }
         };
 
-        let mut value = quote! {
-            ::kv_derive::consumer::Consumer::init(
-                ::kv_derive::from_repr::FromRepr::from_repr(value)?,
-            )
-        };
-        if let Some(from_repr_with) = &field.from_repr_with {
-            value = quote! { ((#from_repr_with)(#value)?) };
-        }
+        let consumer = field.consumer();
+        let value = field.wrap_from_repr_with(quote! { std::str::FromStr::from_str(value)? });
 
         quote! {
             #ident: mapping
                 .get_value(#key)
                 .map_or_else(
                     || #missing_handler,
-                    |value| ::kv_derive::result::Result::Ok(#value),
+                    |value| ::kv_derive::result::Result::Ok(#consumer.init(#value)),
                 )?,
         }
     }

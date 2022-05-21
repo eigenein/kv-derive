@@ -1,50 +1,61 @@
-use crate::from_repr::FromRepr;
+use std::marker::PhantomData;
 
 /// Responsible for consuming the scalar value and modifying itself accordingly.
 pub trait Consumer: Sized {
     /// Defines the scalar representation type.
-    type Repr: FromRepr;
+    type Repr;
 
-    fn init(value: Self::Repr) -> Self;
+    type Target;
+
+    fn init(&self, value: Self::Repr) -> Self::Target;
 
     /// Consume or accumulate the new value into itself.
     ///
     /// May consume one or more entries.
-    fn consume(&mut self, value: Self::Repr);
+    fn consume(&self, target: &mut Self::Target, value: Self::Repr);
 }
 
-impl<T: FromRepr> Consumer for T {
-    type Repr = T;
+pub struct ScalarConsumer<T>(pub PhantomData<T>);
 
-    fn init(value: T) -> Self {
+impl<T> Consumer for ScalarConsumer<T> {
+    type Repr = T;
+    type Target = T;
+
+    fn init(&self, value: Self::Repr) -> Self::Target {
         value
     }
 
-    fn consume(&mut self, value: T) {
-        *self = value;
+    fn consume(&self, target: &mut Self::Target, value: Self::Repr) {
+        *target = value;
     }
 }
 
-impl<T: FromRepr> Consumer for Option<T> {
-    type Repr = T;
+pub struct OptionConsumer<T: Consumer>(pub T);
 
-    fn init(value: T) -> Self {
-        Some(value)
+impl<T: Consumer> Consumer for OptionConsumer<T> {
+    type Repr = T::Repr;
+    type Target = Option<T::Target>;
+
+    fn init(&self, value: Self::Repr) -> Self::Target {
+        Some(self.0.init(value))
     }
 
-    fn consume(&mut self, value: T) {
-        *self = Some(value);
+    fn consume(&self, target: &mut Self::Target, value: Self::Repr) {
+        *target = self.init(value);
     }
 }
 
-impl<T: FromRepr> Consumer for Vec<T> {
-    type Repr = T;
+pub struct CollectionConsumer<T: Consumer>(pub T);
 
-    fn init(value: T) -> Self {
-        vec![value]
+impl<T: Consumer> Consumer for CollectionConsumer<T> {
+    type Repr = T::Repr;
+    type Target = Vec<T::Target>;
+
+    fn init(&self, value: Self::Repr) -> Self::Target {
+        vec![self.0.init(value)]
     }
 
-    fn consume(&mut self, value: T) {
-        self.push(value);
+    fn consume(&self, target: &mut Self::Target, value: Self::Repr) {
+        target.push(self.0.init(value));
     }
 }

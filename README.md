@@ -9,6 +9,8 @@ Derive `struct` conversions from and to string key-value vectors using [`ToStrin
 
 ## Examples
 
+Any type that implements [`std::string::ToString`] and/or [`std::str::FromStr`] supported as a field type:
+
 ### `#[derive(IntoVec)]`
 
 ```rust
@@ -48,6 +50,8 @@ let expected = Foo { bar: 42, qux: "quuux".into() };
 assert_eq!(actual, expected);
 ```
 
+`#[derive(FromIter)]` requires that you specify `#[kv(default(…))]` attribute on each field, because it needs to know what to do when the key is missing in the input.
+
 ### `#[derive(FromMapping)]`
 
 ```rust
@@ -68,7 +72,7 @@ let expected = Foo { bar: 42, qux: "quuux".into() };
 assert_eq!(actual, expected);
 ```
 
-Missing key causes the error:
+Here `#[kv(default(…))]` is not required, and missing key causes the error:
 
 ```rust
 use std::collections::HashMap;
@@ -91,7 +95,7 @@ assert_eq!(actual, Err(kv_derive::error::Error::MissingKey("qux")));
 
 ### Optional fields
 
-[`std::option::Option`] fields are skipped while converting to a vector:
+With `#[kv(optional)]` the macro expects that the fields are wrapped with [`std::option::Option`], and skips `None` values:
 
 ```rust
 use kv_derive::prelude::*;
@@ -99,7 +103,10 @@ use kv_derive::IntoVec;
 
 #[derive(IntoVec)]
 struct Foo {
+    #[kv(optional)]
     bar: Option<i32>,
+    
+    #[kv(optional)]
     qux: Option<i32>,
 }
 
@@ -107,7 +114,9 @@ let foo = Foo { bar: Some(42), qux: None };
 assert_eq!(foo.into_vec(), vec![("bar".into(), "42".into())]);
 ```
 
-and left out with their defaults while converting back to the struct:
+Note that the **both** `#[kv(optional)]` and [`std::option::Option`] type are needed here, because technically you could omit `#[kv(optional)]` and implement [`std::string::ToString`] on a custom `Option<T>` to handle `None` values manually.
+
+For `#[derive(FromIter)]` this also ensures that [`std::str::FromStr`] is called on `T` and not on `Option<T>`:
 
 ```rust
 use kv_derive::prelude::*;
@@ -115,13 +124,13 @@ use kv_derive::FromIter;
 
 #[derive(FromIter, Debug, PartialEq)]
 struct Foo {
-    #[kv(default())]
+    #[kv(default(), optional)]
     bar: Option<i32>,
     
-    #[kv(default())]
+    #[kv(default(), optional)]
     qux: Option<i32>,
     
-    #[kv(default(value = "Some(42)"))]
+    #[kv(default(value = "Some(42)"), optional)]
     quux: Option<i32>,
 }
 
@@ -131,6 +140,8 @@ assert_eq!(actual, expected);
 ```
 
 ### Default values
+
+`#[kv(default())]` implies that the type implements [`std::default::Default`]. But you can also specify a custom default value with #[kv(default(value = "<expression>"))]:
 
 ```rust
 use std::collections::HashMap;
@@ -146,10 +157,10 @@ struct Foo {
     #[kv(default(value = "42"))]
     qux: i32,
     
-    #[kv(default())]
+    #[kv(default(), optional)]
     quux: Option<i32>,
     
-    #[kv(default(value = "Some(100500)"))]
+    #[kv(default(value = "Some(100500)"), optional)]
     quuux: Option<i32>,
 }
 
@@ -157,11 +168,7 @@ let foo = Foo::from_mapping(&HashMap::<String, String>::new()).unwrap();
 assert_eq!(foo, Foo { bar: 0, qux: 42, quux: None, quuux: Some(100500) });
 ```
 
-#### Note for `#[derive(FromIter)]`
-
-`#[derive(FromIter)]` **requires** that all fields are marked with `#[default(…)]` for consistency.
-
-### Renaming fields with `kv(rename = …)`
+### Renaming fields with `#[kv(rename = …)]`
 
 Uses the specified key instead of the identifier:
 
@@ -181,6 +188,8 @@ assert_eq!(foo.into_vec(), vec![("qux".into(), "42".into())]);
 
 ### Convert to and from another representation
 
+Here's an example how you could represent a boolean value with an `i32`:
+
 ```rust
 use std::collections::HashMap;
 
@@ -191,23 +200,30 @@ use kv_derive::{IntoVec, FromIter, FromMapping};
 struct Foo {
     #[kv(
         default(),
+        collection,
         into_repr_with = "|value| value as i32",
         from_repr_with = "|value: i32| kv_derive::result::Result::Ok(value != 0)",
     )]
-    bar: bool,
+    bar: Vec<bool>,
 }
 
-assert_eq!(Foo { bar: true }.into_vec(), vec![("bar".into(), "1".into())]);
-
-assert_eq!(Foo::from_iter(vec![("bar", "1")]).unwrap(), Foo { bar: true });
-assert_eq!(Foo::from_mapping(HashMap::from([("bar", "1")])).unwrap(), Foo { bar: true });
+assert_eq!(
+    Foo { bar: vec![false, true] }.into_vec(),
+    vec![("bar".into(), "0".into()), ("bar".into(), "1".into())],
+);
+assert_eq!(
+    Foo::from_iter(vec![("bar".into(), "0".into()), ("bar".into(), "1".into())]).unwrap(), 
+    Foo { bar: vec![false, true] },
+);
+assert_eq!(
+    Foo::from_mapping(HashMap::from([("bar", "1")])).unwrap(),
+    Foo { bar: vec![true] },
+);
 ```
 
-Note, that `into_repr_with` is applied to the field, while `from_repr_with` is applied to a single value form the input. For scalar values these are the same, but e.g. for [`std::vec::Vec`] they are different.
+In this case, [`std::string::ToString`] and [`std::str::FromStr`] operate on `i32` rather than `bool`.
 
-### [`std::vec::Vec`] fields
-
-Vector field emits multiple entries with the same key:
+### Collection fields
 
 ```rust
 use kv_derive::prelude::*;
@@ -215,6 +231,7 @@ use kv_derive::IntoVec;
 
 #[derive(IntoVec)]
 struct Foo {
+    #[kv(collection)]
     bar: Vec<i32>,
 }
 
@@ -225,15 +242,13 @@ assert_eq!(foo.into_vec(), vec![
 ]);
 ```
 
-which can be recollected back:
-
 ```rust
 use kv_derive::prelude::*;
 use kv_derive::FromIter;
 
 #[derive(FromIter, Debug, PartialEq)]
 struct Foo {
-    #[kv(default())]
+    #[kv(collection, default())]
     bar: Vec<i32>,
 }
 
@@ -244,7 +259,7 @@ assert_eq!(actual, expected);
 
 #### Note for `#[derive(FromMapping)]`
 
-[`std::collections::HashMap`] or [`std::collections::BTreeMap`] cannot contain duplicate keys. However, for consistency, singular values are properly converted to [`std::vec::Vec`]s:
+`HashMap` or `BTreeMap` cannot contain duplicate keys. However, for consistency, singular values are properly converted to [`std::vec::Vec`]s:
 
 ```rust
 use std::collections::HashMap;
@@ -254,6 +269,7 @@ use kv_derive::FromMapping;
 
 #[derive(FromMapping, Debug, PartialEq)]
 struct Foo {
+    #[kv(collection)]
     bar: Vec<i32>,
 }
 
