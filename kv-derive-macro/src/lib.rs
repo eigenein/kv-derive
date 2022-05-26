@@ -132,6 +132,15 @@ pub fn derive_from_mapping(input: TokenStream) -> TokenStream {
                 })
             }
         }
+
+        impl std::convert::TryFrom<std::collections::HashMap<String, String>> for #ident #generics {
+            type Error = ::kv_derive::error::Error;
+
+            #[inline]
+            fn try_from(mapping: std::collections::HashMap<String, String>) -> ::kv_derive::result::Result<Self> {
+                Self::from_mapping(mapping)
+            }
+        }
     };
     tokens.into()
 }
