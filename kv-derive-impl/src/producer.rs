@@ -20,6 +20,7 @@ pub struct ScalarProducer;
 impl<V: ToString> Producer<V> for ScalarProducer {
     type Iter = iter::Once<(String, String)>;
 
+    #[inline]
     fn produce(self, key: &'static str, value: V) -> Self::Iter {
         iter::once((key.to_string(), value.to_string()))
     }
@@ -31,6 +32,7 @@ pub struct WrappedProducer<P, F>(pub P, pub F);
 impl<V1, V2, P: Producer<V2>, F: Fn(V1) -> V2> Producer<V1> for WrappedProducer<P, F> {
     type Iter = P::Iter;
 
+    #[inline]
     fn produce(self, key: &'static str, value: V1) -> Self::Iter {
         self.0.produce(key, self.1(value))
     }
@@ -49,6 +51,7 @@ impl<V, P: Producer<V>> Producer<Option<V>> for OptionProducer<P> {
         fn(((V, &'static str), P)) -> P::Iter,
     >;
 
+    #[inline]
     fn produce(self, key: &'static str, value: Option<V>) -> Self::Iter {
         value
             .into_iter()
@@ -71,6 +74,7 @@ impl<V, P: Producer<V> + Copy + Clone> Producer<Vec<V>> for CollectionProducer<P
         fn(((&'static str, V), P)) -> <P as Producer<V>>::Iter,
     >;
 
+    #[inline]
     fn produce(self, key: &'static str, values: Vec<V>) -> Self::Iter {
         iter::repeat(key)
             .zip(values.into_iter())
@@ -88,6 +92,7 @@ pub struct FlatteningProducer;
 impl<T: IntoVec> Producer<T> for FlatteningProducer {
     type Iter = Box<dyn Iterator<Item = (String, String)>>;
 
+    #[inline]
     fn produce(self, _key: &'static str, value: T) -> Self::Iter {
         value.into_iter()
     }
@@ -102,6 +107,7 @@ pub struct PrefixedFlatteningProducer(pub &'static str);
 impl<V: IntoVec> Producer<V> for PrefixedFlatteningProducer {
     type Iter = Box<dyn Iterator<Item = (String, String)>>;
 
+    #[inline]
     fn produce(self, _key: &'static str, value: V) -> Self::Iter {
         Box::new(
             value
