@@ -87,6 +87,7 @@ impl<V, P: Producer<V> + Copy + Clone> Producer<Vec<V>> for CollectionProducer<P
 /// Simple flattening producer.
 ///
 /// Forwards all the key-value pairs from the inner structure.
+#[derive(Copy, Clone)]
 pub struct FlatteningProducer;
 
 impl<T: IntoVec> Producer<T> for FlatteningProducer {
@@ -102,6 +103,7 @@ impl<T: IntoVec> Producer<T> for FlatteningProducer {
 ///
 /// Forwards all the key-value pairs from the inner structure,
 /// but additionally prepends the keys with the prefix.
+#[derive(Copy, Clone)]
 pub struct PrefixedFlatteningProducer(pub &'static str);
 
 impl<V: IntoVec> Producer<V> for PrefixedFlatteningProducer {
