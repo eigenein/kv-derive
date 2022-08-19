@@ -1,3 +1,13 @@
+#![warn(
+    clippy::all,
+    clippy::missing_const_for_fn,
+    clippy::trivially_copy_pass_by_ref,
+    clippy::map_unwrap_or,
+    clippy::explicit_into_iter_loop,
+    clippy::unused_self,
+    clippy::needless_pass_by_value
+)]
+
 use proc_macro::TokenStream;
 use quote::quote;
 
@@ -122,7 +132,8 @@ pub fn derive_from_mapping(input: TokenStream) -> TokenStream {
     let opts: MacroOpts = parse_opts(input);
     let ident = opts.ident;
     let generics = opts.generics;
-    let mapped_fields = get_fields(opts.data).into_iter().map(generate_mapped_field);
+    let fields = get_fields(opts.data);
+    let mapped_fields = fields.iter().map(generate_mapped_field);
 
     let tokens = quote! {
         impl #generics ::kv_derive::from_mapping::FromMapping for #ident #generics {
@@ -145,7 +156,7 @@ pub fn derive_from_mapping(input: TokenStream) -> TokenStream {
     tokens.into()
 }
 
-fn generate_mapped_field(field: Field) -> proc_macro2::TokenStream {
+fn generate_mapped_field(field: &Field) -> proc_macro2::TokenStream {
     let ident = field.get_ident();
     assert!(
         field.flatten.is_none() || field.default.is_none(),
