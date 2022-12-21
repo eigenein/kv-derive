@@ -4,7 +4,7 @@ Derive `struct` conversions from and to string key-value vectors using [`ToStrin
 
 [![Crates.io](https://img.shields.io/crates/v/kv-derive)](https://crates.io/crates/kv-derive)
 [![Last commit](https://img.shields.io/github/last-commit/eigenein/kv-derive)](https://github.com/eigenein/kv-derive/commits/master)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/eigenein/kv-derive/Check)](https://github.com/eigenein/kv-derive/actions)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/eigenein/kv-derive/check.yaml?branch=main)](https://github.com/eigenein/kv-derive/actions)
 ![License: MIT](https://img.shields.io/crates/l/kv-derive)
 
 ## Examples
